@@ -229,7 +229,7 @@ jobs:
           mkdir -p /tmp/projects
           uv run fastapi-gen create test_frontend \
             --frontend nextjs \
-            --minimal \
+            --auth jwt \
             -o /tmp/projects
 
       - name: Install frontend dependencies

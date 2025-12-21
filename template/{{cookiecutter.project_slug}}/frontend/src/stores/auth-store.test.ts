@@ -1,6 +1,15 @@
 {%- if cookiecutter.use_frontend and cookiecutter.use_jwt %}
 import { describe, it, expect, beforeEach } from "vitest";
 import { useAuthStore } from "./auth-store";
+import type { User } from "@/types";
+
+const createMockUser = (overrides?: Partial<User>): User => ({
+  id: "test-id",
+  email: "test@example.com",
+  is_active: true,
+  created_at: new Date().toISOString(),
+  ...overrides,
+});
 
 describe("Auth Store", () => {
   beforeEach(() => {
@@ -20,10 +29,7 @@ describe("Auth Store", () => {
   });
 
   it("should set user on setUser", () => {
-    const testUser = {
-      id: "test-id",
-      email: "test@example.com",
-    };
+    const testUser = createMockUser();
 
     useAuthStore.getState().setUser(testUser);
 
@@ -32,15 +38,12 @@ describe("Auth Store", () => {
     expect(state.isAuthenticated).toBe(true);
   });
 
-  it("should clear user on clearUser", () => {
+  it("should clear user on logout", () => {
     // First set a user
-    useAuthStore.getState().setUser({
-      id: "test-id",
-      email: "test@example.com",
-    });
+    useAuthStore.getState().setUser(createMockUser());
 
-    // Then clear
-    useAuthStore.getState().clearUser();
+    // Then logout
+    useAuthStore.getState().logout();
 
     const state = useAuthStore.getState();
     expect(state.user).toBeNull();

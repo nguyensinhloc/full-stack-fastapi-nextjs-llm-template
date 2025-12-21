@@ -47,13 +47,6 @@ const securityHeaders = [
 
 const nextConfig: NextConfig = {
   output: "standalone",
-{%- if cookiecutter.enable_logfire %}
-
-  // Enable OpenTelemetry instrumentation for Logfire
-  experimental: {
-    instrumentationHook: true,
-  },
-{%- endif %}
 
   // Security headers
   async headers() {

@@ -7,6 +7,7 @@ export interface User {
   email: string;
   name?: string;
   is_active: boolean;
+  is_superuser?: boolean;
   created_at: string;
 }
 
