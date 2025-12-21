@@ -46,7 +46,7 @@ jobs:
       - name: Install generated project
         working-directory: /tmp/projects/test_minimal/backend
         run: |
-          uv sync
+          uv sync --extra dev
 
       - name: Run linting on generated project
         working-directory: /tmp/projects/test_minimal/backend
@@ -101,7 +101,7 @@ jobs:
       - name: Install generated project
         working-directory: /tmp/projects/test_pg/backend
         run: |
-          uv sync
+          uv sync --extra dev
 
       - name: Run linting on generated project
         working-directory: /tmp/projects/test_pg/backend
@@ -174,7 +174,7 @@ jobs:
       - name: Install generated project
         working-directory: /tmp/projects/test_full/backend
         run: |
-          uv sync
+          uv sync --extra dev
 
       - name: Run linting on generated project
         working-directory: /tmp/projects/test_full/backend
