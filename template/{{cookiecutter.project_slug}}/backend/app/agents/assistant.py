@@ -1,4 +1,4 @@
-{%- if cookiecutter.enable_ai_agent %}
+{%- if cookiecutter.enable_ai_agent and cookiecutter.use_pydantic_ai %}
 """Assistant agent with PydanticAI.
 
 The main conversational agent that can be extended with custom tools.
@@ -198,5 +198,5 @@ async def run_agent(
     agent = get_agent()
     return await agent.run(user_input, history, deps)
 {%- else %}
-"""Assistant agent - not configured."""
+"""PydanticAI Assistant agent - not configured."""
 {%- endif %}

@@ -79,7 +79,7 @@ def instrument_httpx():
 {%- endif %}
 
 
-{%- if cookiecutter.enable_ai_agent %}
+{%- if cookiecutter.enable_ai_agent and cookiecutter.use_pydantic_ai %}
 
 
 def instrument_pydantic_ai():

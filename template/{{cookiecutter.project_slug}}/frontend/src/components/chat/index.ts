@@ -3,6 +3,9 @@ export { MessageList } from "./message-list";
 export { MessageItem } from "./message-item";
 export { ToolCallCard } from "./tool-call-card";
 export { ChatInput } from "./chat-input";
+export { LocalConversationSidebar, ChatSidebarToggle } from "./local-conversation-sidebar";
+export { CopyButton } from "./copy-button";
+export { MarkdownContent } from "./markdown-content";
 {%- if cookiecutter.enable_conversation_persistence and cookiecutter.use_database %}
 export { ConversationSidebar } from "./conversation-sidebar";
 {%- endif %}

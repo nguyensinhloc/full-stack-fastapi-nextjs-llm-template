@@ -18,12 +18,67 @@ if not use_frontend:
         shutil.rmtree(frontend_dir)
         print("Removed frontend/ directory (frontend not enabled)")
 
-# Remove middleware.ts if i18n is not enabled (Next.js requires middleware to export a function)
+# Handle i18n disabled: move files from [locale]/ to app root
 if use_frontend and not enable_i18n:
+    app_dir = os.path.join(os.getcwd(), "frontend", "src", "app")
+    locale_dir = os.path.join(app_dir, "[locale]")
+
+    if os.path.exists(locale_dir):
+        # Move all contents from [locale]/ to app/
+        for item in os.listdir(locale_dir):
+            src = os.path.join(locale_dir, item)
+            dst = os.path.join(app_dir, item)
+            # Skip the layout.tsx from [locale] - we'll use the root layout
+            if item == "layout.tsx":
+                continue
+            if os.path.exists(dst):
+                if os.path.isdir(dst):
+                    shutil.rmtree(dst)
+                else:
+                    os.remove(dst)
+            shutil.move(src, dst)
+
+        # Remove the now-empty [locale] directory
+        shutil.rmtree(locale_dir)
+        print("Moved routes from [locale]/ to app/ (i18n not enabled)")
+
+        # Update root layout to include providers
+        root_layout = os.path.join(app_dir, "layout.tsx")
+        if os.path.exists(root_layout):
+            with open(root_layout, "r") as f:
+                content = f.read()
+            # Add Providers import and wrap children
+            content = content.replace(
+                'import "./globals.css";',
+                'import "./globals.css";\nimport { Providers } from "./providers";'
+            )
+            content = content.replace(
+                "<body className={inter.className}>{children}</body>",
+                "<body className={inter.className}>\n        <Providers>{children}</Providers>\n      </body>"
+            )
+            with open(root_layout, "w") as f:
+                f.write(content)
+
+    # Remove middleware.ts
     middleware_file = os.path.join(os.getcwd(), "frontend", "src", "middleware.ts")
     if os.path.exists(middleware_file):
         os.remove(middleware_file)
-        print("Removed middleware.ts (i18n not enabled)")
+
+    # Remove i18n related files
+    i18n_file = os.path.join(os.getcwd(), "frontend", "src", "i18n.ts")
+    if os.path.exists(i18n_file):
+        os.remove(i18n_file)
+
+    messages_dir = os.path.join(os.getcwd(), "frontend", "messages")
+    if os.path.exists(messages_dir):
+        shutil.rmtree(messages_dir)
+
+    # Remove language-switcher component
+    lang_switcher = os.path.join(os.getcwd(), "frontend", "src", "components", "language-switcher.tsx")
+    if os.path.exists(lang_switcher):
+        os.remove(lang_switcher)
+
+    print("Removed i18n files (i18n not enabled)")
 
 # Remove .env files if generate_env is false
 if not generate_env:
@@ -37,8 +92,26 @@ if not generate_env:
         os.remove(frontend_env)
         print("Removed frontend/.env.local (generate_env disabled)")
 
-# Run ruff to auto-fix import sorting and other linting issues
+# Generate uv.lock for backend (required for Docker builds)
 backend_dir = os.path.join(os.getcwd(), "backend")
+if os.path.exists(backend_dir):
+    uv_cmd = shutil.which("uv")
+    if uv_cmd:
+        print("Generating uv.lock for backend...")
+        result = subprocess.run(
+            [uv_cmd, "lock"],
+            cwd=backend_dir,
+            capture_output=True,
+            check=False,
+        )
+        if result.returncode == 0:
+            print("uv.lock generated successfully.")
+        else:
+            print("Warning: Failed to generate uv.lock. Run 'uv lock' in backend/ directory.")
+    else:
+        print("Warning: uv not found. Run 'uv lock' in backend/ to generate lock file.")
+
+# Run ruff to auto-fix import sorting and other linting issues
 if os.path.exists(backend_dir):
     ruff_cmd = None
 

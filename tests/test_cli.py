@@ -306,6 +306,46 @@ class TestCreateCommand:
         assert "Error" in result.output
         assert "Generation failed" in result.output
 
+    @patch("fastapi_gen.cli.generate_project")
+    @patch("fastapi_gen.cli.post_generation_tasks")
+    def test_create_with_ai_agent_pydantic_ai(
+        self,
+        mock_post_gen: MagicMock,
+        mock_generate: MagicMock,
+        runner: CliRunner,
+        tmp_path: Path,
+    ) -> None:
+        """Test create with AI agent (PydanticAI)."""
+        mock_generate.return_value = tmp_path / "myproject"
+
+        result = runner.invoke(create, ["myproject", "--ai-agent", "--ai-framework", "pydantic_ai"])
+
+        assert result.exit_code == 0
+        assert "AI Agent: pydantic_ai" in result.output
+        config = mock_generate.call_args[0][0]
+        assert config.enable_ai_agent is True
+        assert config.ai_framework.value == "pydantic_ai"
+
+    @patch("fastapi_gen.cli.generate_project")
+    @patch("fastapi_gen.cli.post_generation_tasks")
+    def test_create_with_ai_agent_langchain(
+        self,
+        mock_post_gen: MagicMock,
+        mock_generate: MagicMock,
+        runner: CliRunner,
+        tmp_path: Path,
+    ) -> None:
+        """Test create with AI agent (LangChain)."""
+        mock_generate.return_value = tmp_path / "myproject"
+
+        result = runner.invoke(create, ["myproject", "--ai-agent", "--ai-framework", "langchain"])
+
+        assert result.exit_code == 0
+        assert "AI Agent: langchain" in result.output
+        config = mock_generate.call_args[0][0]
+        assert config.enable_ai_agent is True
+        assert config.ai_framework.value == "langchain"
+
 
 class TestTemplatesCommand:
     """Tests for 'templates' command."""

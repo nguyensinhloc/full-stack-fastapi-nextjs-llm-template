@@ -35,7 +35,9 @@ export type WSEventType =
   | "final_result_start"
   | "final_result"
   | "complete"
-  | "error";
+  | "error"
+  | "conversation_created"
+  | "message_saved";
 
 export interface WSEvent {
   type: WSEventType;

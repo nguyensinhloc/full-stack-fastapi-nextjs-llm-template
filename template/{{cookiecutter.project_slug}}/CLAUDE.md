@@ -23,8 +23,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 {%- if cookiecutter.enable_redis %}
 - Redis (caching, sessions)
 {%- endif %}
-{%- if cookiecutter.enable_ai_agent %}
+{%- if cookiecutter.enable_ai_agent and cookiecutter.use_pydantic_ai %}
 - PydanticAI (AI agents with tool support)
+{%- endif %}
+{%- if cookiecutter.enable_ai_agent and cookiecutter.use_langchain %}
+- LangChain (AI agents with tool support)
 {%- endif %}
 {%- if cookiecutter.use_celery %}
 - Celery (background tasks)
@@ -185,13 +188,27 @@ def my_command(option: str):
     success(f"Done with {option}")
 ```
 Commands are auto-discovered. Run with: `{{ cookiecutter.project_slug }} cmd my-command`
-{%- if cookiecutter.enable_ai_agent %}
+{%- if cookiecutter.enable_ai_agent and cookiecutter.use_pydantic_ai %}
 
-**3. Add an AI agent tool:**
+**3. Add an AI agent tool (PydanticAI):**
 ```python
 # app/agents/assistant.py
 @agent.tool
 async def my_tool(ctx: RunContext[Deps], param: str) -> dict:
+    """Tool description for LLM."""
+    # Tool logic
+    return {"result": param}
+```
+{%- endif %}
+{%- if cookiecutter.enable_ai_agent and cookiecutter.use_langchain %}
+
+**3. Add an AI agent tool (LangChain):**
+```python
+# app/agents/langchain_assistant.py
+from langchain.tools import tool
+
+@tool
+def my_tool(param: str) -> dict:
     """Tool description for LLM."""
     # Tool logic
     return {"result": param}
@@ -339,8 +356,11 @@ pytest tests/integration/
 - Use `db.flush()` in repositories (not `commit`) - let the dependency manage transactions
 - Services raise domain exceptions (`NotFoundError`, etc.) - routes convert to HTTP
 - Schemas are separate for Create, Update, and Response
-{%- if cookiecutter.enable_ai_agent %}
-- AI Agent uses `iter()` for WebSocket streaming (not `run()`)
+{%- if cookiecutter.enable_ai_agent and cookiecutter.use_pydantic_ai %}
+- AI Agent uses PydanticAI `iter()` for WebSocket streaming
+{%- endif %}
+{%- if cookiecutter.enable_ai_agent and cookiecutter.use_langchain %}
+- AI Agent uses LangChain `stream()` for WebSocket streaming
 {%- endif %}
 - Custom commands auto-discovered from `app/commands/`
 

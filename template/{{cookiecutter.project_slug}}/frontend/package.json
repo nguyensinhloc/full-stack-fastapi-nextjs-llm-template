@@ -38,7 +38,10 @@
 {%- if cookiecutter.enable_i18n %}
     "next-intl": "^3.25.3",
 {%- endif %}
-    "class-variance-authority": "^0.7.1"
+    "class-variance-authority": "^0.7.1",
+    "react-markdown": "^9.0.1",
+    "remark-gfm": "^4.0.0",
+    "rehype-highlight": "^7.0.0"
   },
   "devDependencies": {
     "typescript": "^5.7.2",

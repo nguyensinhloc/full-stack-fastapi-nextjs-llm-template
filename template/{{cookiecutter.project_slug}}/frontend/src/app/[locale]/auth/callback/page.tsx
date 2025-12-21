@@ -1,13 +1,13 @@
 {%- if cookiecutter.enable_oauth %}
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuthStore } from "@/stores/auth-store";
 import { Card, CardContent } from "@/components/ui";
 import { ROUTES } from "@/lib/constants";
 
-export default function AuthCallbackPage() {
+function AuthCallbackContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [error, setError] = useState<string | null>(null);
@@ -66,26 +66,43 @@ export default function AuthCallbackPage() {
   }, [searchParams, router, checkAuth]);
 
   return (
-    <div className="min-h-screen flex items-center justify-center">
-      <Card className="w-full max-w-md">
-        <CardContent className="pt-6">
-          {error ? (
-            <div className="text-center">
-              <p className="text-destructive mb-2">{error}</p>
-              <p className="text-sm text-muted-foreground">
-                Redirecting to login...
-              </p>
-            </div>
-          ) : (
-            <div className="text-center">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4" />
-              <p className="text-muted-foreground">
-                Completing authentication...
-              </p>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+    <Card className="w-full max-w-md">
+      <CardContent className="pt-6">
+        {error ? (
+          <div className="text-center">
+            <p className="text-destructive mb-2">{error}</p>
+            <p className="text-muted-foreground text-sm">Redirecting to login...</p>
+          </div>
+        ) : (
+          <div className="text-center">
+            <div className="border-primary mx-auto mb-4 h-8 w-8 animate-spin rounded-full border-b-2" />
+            <p className="text-muted-foreground">Completing authentication...</p>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+function LoadingFallback() {
+  return (
+    <Card className="w-full max-w-md">
+      <CardContent className="pt-6">
+        <div className="text-center">
+          <div className="border-primary mx-auto mb-4 h-8 w-8 animate-spin rounded-full border-b-2" />
+          <p className="text-muted-foreground">Loading...</p>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+export default function AuthCallbackPage() {
+  return (
+    <div className="flex min-h-screen items-center justify-center">
+      <Suspense fallback={<LoadingFallback />}>
+        <AuthCallbackContent />
+      </Suspense>
     </div>
   );
 }

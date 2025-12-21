@@ -7,6 +7,7 @@ from rich.console import Console
 
 from . import __version__
 from .config import (
+    AIFrameworkType,
     AuthType,
     CIType,
     DatabaseType,
@@ -124,6 +125,18 @@ def new(output: Path | None, no_input: bool, name: str | None) -> None:
     default=10,
     help="Database max overflow connections (default: 10)",
 )
+@click.option(
+    "--ai-agent",
+    is_flag=True,
+    default=False,
+    help="Enable AI agent with WebSocket streaming",
+)
+@click.option(
+    "--ai-framework",
+    type=click.Choice(["pydantic_ai", "langchain"]),
+    default="pydantic_ai",
+    help="AI framework (default: pydantic_ai)",
+)
 def create(
     name: str,
     output: Path | None,
@@ -139,6 +152,8 @@ def create(
     frontend_port: int,
     db_pool_size: int,
     db_max_overflow: int,
+    ai_agent: bool,
+    ai_framework: str,
 ) -> None:
     """Create a new FastAPI project with specified options.
 
@@ -180,6 +195,8 @@ def create(
                 frontend_port=frontend_port,
                 db_pool_size=db_pool_size,
                 db_max_overflow=db_max_overflow,
+                enable_ai_agent=ai_agent,
+                ai_framework=AIFrameworkType(ai_framework),
             )
 
         console.print(f"[cyan]Creating project:[/] {name}")
@@ -187,6 +204,8 @@ def create(
         console.print(f"[dim]Auth: {config.auth.value}[/]")
         if config.frontend != FrontendType.NONE:
             console.print(f"[dim]Frontend: {config.frontend.value}[/]")
+        if config.enable_ai_agent:
+            console.print(f"[dim]AI Agent: {config.ai_framework.value}[/]")
         console.print()
 
         project_path = generate_project(config, output)
@@ -232,6 +251,11 @@ def templates() -> None:
     console.print("  - nextjs      Next.js 15 (App Router, TypeScript, Bun)")
     console.print()
 
+    console.print("[bold]AI Frameworks:[/]")
+    console.print("  - pydantic_ai  PydanticAI (recommended)")
+    console.print("  - langchain    LangChain")
+    console.print()
+
     console.print("[bold]Optional Features:[/]")
     console.print("  - Logfire integration")
     console.print("  - Redis (caching/sessions)")
@@ -240,7 +264,7 @@ def templates() -> None:
     console.print("  - Admin Panel (SQLAdmin)")
     console.print("  - WebSockets")
     console.print("  - File Storage (S3/MinIO)")
-    console.print("  - AI Agent (PydanticAI)")
+    console.print("  - AI Agent (--ai-agent --ai-framework pydantic_ai|langchain)")
     console.print("  - Example CRUD (Item model)")
     console.print("  - Docker + docker-compose")
     console.print("  - GitHub Actions / GitLab CI")

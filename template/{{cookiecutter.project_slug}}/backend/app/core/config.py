@@ -216,10 +216,19 @@ class Settings(BaseSettings):
 
 {%- if cookiecutter.enable_ai_agent %}
 
-    # === AI Agent (PydanticAI) ===
+    # === AI Agent ({{ cookiecutter.ai_framework }}) ===
     OPENAI_API_KEY: str = ""
     AI_MODEL: str = "gpt-4o-mini"
     AI_TEMPERATURE: float = 0.7
+    AI_FRAMEWORK: str = "{{ cookiecutter.ai_framework }}"
+{%- if cookiecutter.use_langchain %}
+
+    # === LangSmith (LangChain observability) ===
+    LANGCHAIN_TRACING_V2: bool = True
+    LANGCHAIN_API_KEY: str | None = None
+    LANGCHAIN_PROJECT: str = "{{ cookiecutter.project_slug }}"
+    LANGCHAIN_ENDPOINT: str = "https://api.smith.langchain.com"
+{%- endif %}
 {%- endif %}
 
 {%- if cookiecutter.enable_cors %}

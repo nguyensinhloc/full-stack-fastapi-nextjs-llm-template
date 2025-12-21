@@ -20,7 +20,6 @@ export function ChatInput({ onSend, disabled, isProcessing }: ChatInputProps) {
     }
   }, [isProcessing]);
 
-  // Auto-resize textarea
   useEffect(() => {
     if (textareaRef.current) {
       textareaRef.current.style.height = "auto";
@@ -50,21 +49,21 @@ export function ChatInput({ onSend, disabled, isProcessing }: ChatInputProps) {
         value={message}
         onChange={(e) => setMessage(e.target.value)}
         onKeyDown={handleKeyDown}
-        placeholder="Type a command or request..."
+        placeholder="Type a message..."
         disabled={disabled}
         rows={1}
-        className="w-full resize-none bg-transparent pr-12 text-sm placeholder:text-muted-foreground focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+        className="w-full resize-none bg-transparent pr-14 text-sm sm:text-base placeholder:text-muted-foreground focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
       />
       <Button
         type="submit"
         size="icon"
         disabled={disabled || !message.trim()}
-        className="absolute right-0 top-0 h-8 w-8 rounded-lg"
+        className="absolute right-0 top-0 h-10 w-10 rounded-lg"
       >
         {isProcessing ? (
-          <Loader2 className="h-4 w-4 animate-spin" />
+          <Loader2 className="h-5 w-5 animate-spin" />
         ) : (
-          <Send className="h-4 w-4" />
+          <Send className="h-5 w-5" />
         )}
         <span className="sr-only">Send message</span>
       </Button>

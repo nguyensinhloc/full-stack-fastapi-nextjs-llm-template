@@ -1,12 +1,33 @@
 [project]
 name = "fastapi-fullstack"
-version = "0.1.4"
-description = "Interactive FastAPI project generator with Logfire observability"
+version = "0.1.5"
+description = "Full-stack FastAPI + Next.js template generator with PydanticAI/LangChain agents, WebSocket streaming, 20+ enterprise integrations, and Logfire/LangSmith observability. Ship AI apps fast. CLI tool to generate production-ready FastAPI + Next.js projects with AI agents, auth, and observability."
 readme = "README.md"
 requires-python = ">=3.11"
 license = { text = "MIT" }
-authors = [{ name = "Your Name", email = "your@email.com" }]
-keywords = ["fastapi", "generator", "template", "logfire", "observability"]
+authors = [{ name = "Vstorm", email = "hr@vstorm.co" }]
+keywords = [
+    "fastapi",
+    "nextjs",
+    "react",
+    "python",
+    "typescript",
+    "template",
+    "cookiecutter",
+    "full-stack",
+    "postgresql",
+    "mongodb",
+    "redis",
+    "docker",
+    "celery",
+    "ai-agents",
+    "llm",
+    "pydantic-ai",
+    "langchain",
+    "langgraph",
+    "logfire",
+    "observability",
+]
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Environment :: Console",

@@ -72,6 +72,13 @@ class OAuthProvider(str, Enum):
     GOOGLE = "google"
 
 
+class AIFrameworkType(str, Enum):
+    """Supported AI agent frameworks."""
+
+    PYDANTIC_AI = "pydantic_ai"
+    LANGCHAIN = "langchain"
+
+
 class LogfireFeatures(BaseModel):
     """Logfire instrumentation features."""
 
@@ -125,6 +132,7 @@ class ProjectConfig(BaseModel):
     enable_websockets: bool = False
     enable_file_storage: bool = False
     enable_ai_agent: bool = False
+    ai_framework: AIFrameworkType = AIFrameworkType.PYDANTIC_AI
     enable_conversation_persistence: bool = False
     enable_webhooks: bool = False
     websocket_auth: WebSocketAuthType = WebSocketAuthType.NONE
@@ -221,6 +229,9 @@ class ProjectConfig(BaseModel):
             "enable_websockets": self.enable_websockets,
             "enable_file_storage": self.enable_file_storage,
             "enable_ai_agent": self.enable_ai_agent,
+            "ai_framework": self.ai_framework.value,
+            "use_pydantic_ai": self.ai_framework == AIFrameworkType.PYDANTIC_AI,
+            "use_langchain": self.ai_framework == AIFrameworkType.LANGCHAIN,
             "enable_conversation_persistence": self.enable_conversation_persistence,
             "enable_webhooks": self.enable_webhooks,
             "websocket_auth": self.websocket_auth.value,

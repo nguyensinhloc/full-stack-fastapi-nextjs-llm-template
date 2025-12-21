@@ -61,7 +61,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[{% if cookiecutter.enable_red
     instrument_httpx()
 {%- endif %}
 
-{%- if cookiecutter.enable_logfire and cookiecutter.enable_ai_agent %}
+{%- if cookiecutter.enable_logfire and cookiecutter.enable_ai_agent and cookiecutter.use_pydantic_ai %}
     from app.core.logfire_setup import instrument_pydantic_ai
     instrument_pydantic_ai()
 {%- endif %}
@@ -194,8 +194,11 @@ def create_app() -> FastAPI:
 {%- if cookiecutter.enable_rate_limiting %}
 - **Rate Limiting**: Request rate limiting per client
 {%- endif %}
-{%- if cookiecutter.enable_ai_agent %}
+{%- if cookiecutter.enable_ai_agent and cookiecutter.use_pydantic_ai %}
 - **AI Agent**: PydanticAI-powered conversational assistant
+{%- endif %}
+{%- if cookiecutter.enable_ai_agent and cookiecutter.use_langchain %}
+- **AI Agent**: LangChain-powered conversational assistant
 {%- endif %}
 {%- if cookiecutter.enable_logfire %}
 - **Observability**: Logfire integration for tracing and monitoring

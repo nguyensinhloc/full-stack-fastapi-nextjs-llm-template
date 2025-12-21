@@ -90,8 +90,13 @@ dependencies = [
 {%- if cookiecutter.enable_file_storage %}
     "boto3>=1.35.0",
 {%- endif %}
-{%- if cookiecutter.enable_ai_agent %}
+{%- if cookiecutter.enable_ai_agent and cookiecutter.use_pydantic_ai %}
     "pydantic-ai>=0.0.39",
+{%- endif %}
+{%- if cookiecutter.enable_ai_agent and cookiecutter.use_langchain %}
+    "langchain>=0.3.0",
+    "langchain-openai>=0.3.0",
+    "langgraph>=0.2.0",
 {%- endif %}
 {%- if cookiecutter.logfire_httpx or cookiecutter.enable_file_storage %}
     "httpx>=0.27.0",

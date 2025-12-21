@@ -7,6 +7,7 @@ import pytest
 
 from fastapi_gen.config import (
     AdminEnvironmentType,
+    AIFrameworkType,
     AuthType,
     BackgroundTaskType,
     CIType,
@@ -316,6 +317,38 @@ class TestPromptWebsocketAuth:
         result = prompt_websocket_auth()
 
         assert result == WebSocketAuthType.API_KEY
+
+
+class TestPromptAIFramework:
+    """Tests for prompt_ai_framework function."""
+
+    @patch("fastapi_gen.prompts.questionary")
+    def test_returns_pydantic_ai(self, mock_questionary: MagicMock) -> None:
+        """Test PydanticAI framework is returned."""
+        from fastapi_gen.prompts import prompt_ai_framework
+
+        mock_select = MagicMock()
+        mock_select.ask.return_value = AIFrameworkType.PYDANTIC_AI
+        mock_questionary.select.return_value = mock_select
+        mock_questionary.Choice = MagicMock()
+
+        result = prompt_ai_framework()
+
+        assert result == AIFrameworkType.PYDANTIC_AI
+
+    @patch("fastapi_gen.prompts.questionary")
+    def test_returns_langchain(self, mock_questionary: MagicMock) -> None:
+        """Test LangChain framework is returned."""
+        from fastapi_gen.prompts import prompt_ai_framework
+
+        mock_select = MagicMock()
+        mock_select.ask.return_value = AIFrameworkType.LANGCHAIN
+        mock_questionary.select.return_value = mock_select
+        mock_questionary.Choice = MagicMock()
+
+        result = prompt_ai_framework()
+
+        assert result == AIFrameworkType.LANGCHAIN
 
 
 class TestPromptAdminConfig:
@@ -699,6 +732,7 @@ class TestRunInteractivePrompts:
 
     @patch("fastapi_gen.prompts.questionary")
     @patch("fastapi_gen.prompts.prompt_websocket_auth")
+    @patch("fastapi_gen.prompts.prompt_ai_framework")
     @patch("fastapi_gen.prompts.prompt_ports")
     @patch("fastapi_gen.prompts.prompt_python_version")
     @patch("fastapi_gen.prompts.prompt_frontend")
@@ -725,6 +759,7 @@ class TestRunInteractivePrompts:
         mock_frontend: MagicMock,
         mock_python_version: MagicMock,
         mock_ports: MagicMock,
+        mock_ai_framework: MagicMock,
         mock_websocket_auth: MagicMock,
         mock_questionary: MagicMock,
     ) -> None:
@@ -766,6 +801,7 @@ class TestRunInteractivePrompts:
         mock_frontend.return_value = FrontendType.NONE
         mock_python_version.return_value = "3.12"
         mock_ports.return_value = {"backend_port": 8000}
+        mock_ai_framework.return_value = AIFrameworkType.PYDANTIC_AI
         mock_websocket_auth.return_value = WebSocketAuthType.JWT
 
         # Mock session management and conversation persistence confirm

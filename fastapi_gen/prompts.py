@@ -9,6 +9,7 @@ from rich.text import Text
 
 from .config import (
     AdminEnvironmentType,
+    AIFrameworkType,
     AuthType,
     BackgroundTaskType,
     CIType,
@@ -45,12 +46,15 @@ def prompt_basic_info() -> dict[str, str]:
     console.print("[bold cyan]Basic Information[/]")
     console.print()
 
-    project_name = _check_cancelled(
+    raw_project_name = _check_cancelled(
         questionary.text(
             "Project name:",
-            validate=lambda x: len(x) > 0 and x[0].isalpha() and x.replace("_", "").isalnum(),
+            validate=lambda x: len(x) > 0
+            and x[0].isalpha()
+            and x.replace("_", "").replace(" ", "").isalnum(),
         ).ask()
     )
+    project_name = raw_project_name.lower().replace(" ", "_").replace("-", "_")
 
     project_description = _check_cancelled(
         questionary.text(
@@ -238,7 +242,7 @@ def prompt_integrations() -> dict[str, bool]:
                 questionary.Choice("Admin Panel (SQLAdmin)", value="admin_panel"),
                 questionary.Choice("WebSockets", value="websockets"),
                 questionary.Choice("File Storage (S3/MinIO)", value="file_storage"),
-                questionary.Choice("AI Agent (PydanticAI)", value="ai_agent"),
+                questionary.Choice("AI Agent (PydanticAI/LangChain)", value="ai_agent"),
                 questionary.Choice("Webhooks (outbound events)", value="webhooks"),
                 questionary.Choice("Example CRUD (Item model)", value="example_crud", checked=True),
                 questionary.Choice("CORS middleware", value="cors", checked=True),
@@ -346,6 +350,29 @@ def prompt_frontend_features() -> dict[str, bool]:
     return {
         "enable_i18n": "i18n" in features,
     }
+
+
+def prompt_ai_framework() -> AIFrameworkType:
+    """Prompt for AI framework selection."""
+    console.print()
+    console.print("[bold cyan]AI Agent Framework[/]")
+    console.print()
+
+    choices = [
+        questionary.Choice("PydanticAI (recommended)", value=AIFrameworkType.PYDANTIC_AI),
+        questionary.Choice("LangChain", value=AIFrameworkType.LANGCHAIN),
+    ]
+
+    return cast(
+        AIFrameworkType,
+        _check_cancelled(
+            questionary.select(
+                "Select AI framework:",
+                choices=choices,
+                default=choices[0],
+            ).ask()
+        ),
+    )
 
 
 def prompt_websocket_auth() -> WebSocketAuthType:
@@ -528,10 +555,12 @@ def run_interactive_prompts() -> ProjectConfig:
     ):
         integrations["enable_redis"] = True
 
-    # WebSocket auth and conversation persistence for AI Agent
+    # AI framework, WebSocket auth and conversation persistence for AI Agent
+    ai_framework = AIFrameworkType.PYDANTIC_AI
     websocket_auth = WebSocketAuthType.NONE
     enable_conversation_persistence = False
     if integrations.get("enable_ai_agent"):
+        ai_framework = prompt_ai_framework()
         websocket_auth = prompt_websocket_auth()
         # Only offer persistence if database is enabled
         if database != DatabaseType.NONE:
@@ -569,6 +598,7 @@ def run_interactive_prompts() -> ProjectConfig:
         enable_logfire=enable_logfire,
         logfire_features=logfire_features,
         background_tasks=background_tasks,
+        ai_framework=ai_framework,
         websocket_auth=websocket_auth,
         enable_conversation_persistence=enable_conversation_persistence,
         admin_environments=admin_environments,
@@ -619,7 +649,8 @@ def show_summary(config: ProjectConfig) -> None:
     if config.enable_websockets:
         enabled_features.append("WebSockets")
     if config.enable_ai_agent:
-        enabled_features.append("AI Agent")
+        ai_info = f"AI Agent ({config.ai_framework.value})"
+        enabled_features.append(ai_info)
     if config.enable_webhooks:
         enabled_features.append("Webhooks")
     if config.enable_i18n:

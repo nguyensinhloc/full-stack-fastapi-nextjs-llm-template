@@ -30,18 +30,18 @@ export default function DashboardPage() {
   }, []);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       <div>
-        <h1 className="text-3xl font-bold">Dashboard</h1>
-        <p className="text-muted-foreground">
+        <h1 className="text-2xl sm:text-3xl font-bold">Dashboard</h1>
+        <p className="text-sm sm:text-base text-muted-foreground">
           Welcome back{user?.name ? `, ${user.name}` : ""}!
         </p>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-4 sm:gap-6 md:grid-cols-2 lg:grid-cols-3">
         <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
+          <CardHeader className="pb-2 sm:pb-4">
+            <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
               API Status
               {healthLoading ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
@@ -54,16 +54,16 @@ export default function DashboardPage() {
           </CardHeader>
           <CardContent>
             {healthLoading ? (
-              <p className="text-muted-foreground">Checking...</p>
+              <p className="text-muted-foreground text-sm">Checking...</p>
             ) : healthError ? (
-              <p className="text-destructive">Backend unavailable</p>
+              <p className="text-destructive text-sm">Backend unavailable</p>
             ) : (
               <div className="space-y-1">
                 <p className="text-sm">
                   Status: <span className="font-medium">{health?.status}</span>
                 </p>
                 {health?.version && (
-                  <p className="text-sm text-muted-foreground">
+                  <p className="text-xs sm:text-sm text-muted-foreground">
                     Version: {health.version}
                   </p>
                 )}
@@ -73,13 +73,13 @@ export default function DashboardPage() {
         </Card>
 
         <Card>
-          <CardHeader>
-            <CardTitle>Your Account</CardTitle>
+          <CardHeader className="pb-2 sm:pb-4">
+            <CardTitle className="text-base sm:text-lg">Your Account</CardTitle>
           </CardHeader>
           <CardContent>
             {user ? (
               <div className="space-y-1">
-                <p className="text-sm">
+                <p className="text-sm break-all">
                   Email: <span className="font-medium">{user.email}</span>
                 </p>
                 {user.name && (
@@ -89,7 +89,7 @@ export default function DashboardPage() {
                 )}
               </div>
             ) : (
-              <p className="text-muted-foreground">Loading...</p>
+              <p className="text-muted-foreground text-sm">Loading...</p>
             )}
           </CardContent>
         </Card>
