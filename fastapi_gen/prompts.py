@@ -388,7 +388,6 @@ def prompt_dev_tools() -> dict[str, Any]:
             choices=[
                 questionary.Choice("pytest + fixtures", value="pytest", checked=True),
                 questionary.Choice("pre-commit hooks", value="precommit", checked=True),
-                questionary.Choice("Makefile", value="makefile", checked=True),
                 questionary.Choice("Docker + docker-compose", value="docker", checked=True),
                 questionary.Choice("Kubernetes manifests", value="kubernetes"),
             ],
@@ -409,7 +408,6 @@ def prompt_dev_tools() -> dict[str, Any]:
     return {
         "enable_pytest": "pytest" in features,
         "enable_precommit": "precommit" in features,
-        "enable_makefile": "makefile" in features,
         "enable_docker": "docker" in features,
         "enable_kubernetes": "kubernetes" in features,
         "ci_type": ci_type,

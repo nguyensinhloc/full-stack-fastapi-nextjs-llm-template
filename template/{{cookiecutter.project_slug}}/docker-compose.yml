@@ -14,7 +14,7 @@ services:
       - ./backend/app:/app/app:ro
       - ./backend/cli:/app/cli:ro
     env_file:
-      - .env
+      - ./backend/.env
     environment:
       - DEBUG=true
       - ENVIRONMENT=local
@@ -103,7 +103,7 @@ services:
       - ./backend/app:/app/app:ro
     command: celery -A app.worker.celery_app worker --loglevel=debug
     env_file:
-      - .env
+      - ./backend/.env
     environment:
       - DEBUG=true
 {%- if cookiecutter.use_postgresql %}
@@ -132,7 +132,7 @@ services:
       - ./backend/app:/app/app:ro
     command: celery -A app.worker.celery_app beat --loglevel=debug
     env_file:
-      - .env
+      - ./backend/.env
     environment:
       - DEBUG=true
       - REDIS_HOST=redis
@@ -154,7 +154,7 @@ services:
     ports:
       - "5555:5555"
     env_file:
-      - .env
+      - ./backend/.env
     environment:
       - DEBUG=true
       - REDIS_HOST=redis
@@ -179,7 +179,7 @@ services:
       - ./backend/app:/app/app:ro
     command: taskiq worker app.worker.taskiq_app:broker --workers 1 --reload
     env_file:
-      - .env
+      - ./backend/.env
     environment:
       - DEBUG=true
 {%- if cookiecutter.use_postgresql %}
@@ -208,7 +208,7 @@ services:
       - ./backend/app:/app/app:ro
     command: taskiq scheduler app.worker.taskiq_app:scheduler
     env_file:
-      - .env
+      - ./backend/.env
     environment:
       - DEBUG=true
       - REDIS_HOST=redis

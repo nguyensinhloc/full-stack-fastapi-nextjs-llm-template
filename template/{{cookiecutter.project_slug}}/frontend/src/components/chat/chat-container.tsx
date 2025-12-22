@@ -72,6 +72,13 @@ function AuthenticatedChatContainer() {
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
+  // Clear messages when starting new chat (currentConversationId becomes null)
+  useEffect(() => {
+    if (currentConversationId === null) {
+      clearMessages();
+    }
+  }, [currentConversationId, clearMessages]);
+
   useEffect(() => {
     connect();
     return () => disconnect();

@@ -67,7 +67,7 @@ services:
       dockerfile: Dockerfile
     container_name: {{ cookiecutter.project_slug }}_backend
     env_file:
-      - .env
+      - ./backend/.env
     environment:
       - DEBUG=false
       - ENVIRONMENT=production
@@ -178,7 +178,7 @@ services:
     container_name: {{ cookiecutter.project_slug }}_celery_worker
     command: celery -A app.worker.celery_app worker --loglevel=warning --concurrency=4
     env_file:
-      - .env
+      - ./backend/.env
     environment:
       - DEBUG=false
 {%- if cookiecutter.use_postgresql %}
@@ -214,7 +214,7 @@ services:
     container_name: {{ cookiecutter.project_slug }}_celery_beat
     command: celery -A app.worker.celery_app beat --loglevel=warning
     env_file:
-      - .env
+      - ./backend/.env
     environment:
       - DEBUG=false
       - REDIS_HOST=redis
@@ -239,7 +239,7 @@ services:
     container_name: {{ cookiecutter.project_slug }}_flower
     command: celery -A app.worker.celery_app flower --port=5555
     env_file:
-      - .env
+      - ./backend/.env
     environment:
       - DEBUG=false
       - REDIS_HOST=redis
@@ -276,7 +276,7 @@ services:
     container_name: {{ cookiecutter.project_slug }}_taskiq_worker
     command: taskiq worker app.worker.taskiq_app:broker --workers 4
     env_file:
-      - .env
+      - ./backend/.env
     environment:
       - DEBUG=false
 {%- if cookiecutter.use_postgresql %}
@@ -312,7 +312,7 @@ services:
     container_name: {{ cookiecutter.project_slug }}_taskiq_scheduler
     command: taskiq scheduler app.worker.taskiq_app:scheduler
     env_file:
-      - .env
+      - ./backend/.env
     environment:
       - DEBUG=false
       - REDIS_HOST=redis

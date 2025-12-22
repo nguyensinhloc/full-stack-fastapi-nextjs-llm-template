@@ -1,6 +1,7 @@
 {%- if cookiecutter.use_frontend %}
 "use client";
 
+import { useEffect, useState } from "react";
 import { Moon, Sun, Monitor } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useThemeStore, Theme, getResolvedTheme } from "@/stores/theme-store";
@@ -12,6 +13,13 @@ interface ThemeToggleProps {
 
 export function ThemeToggle({ variant = "icon", className }: ThemeToggleProps) {
   const { theme, setTheme } = useThemeStore();
+  const [mounted, setMounted] = useState(false);
+
+  // Prevent hydration mismatch by only rendering after mount
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   const resolvedTheme = getResolvedTheme(theme);
 
   const cycleTheme = () => {
@@ -20,6 +28,20 @@ export function ThemeToggle({ variant = "icon", className }: ThemeToggleProps) {
     const nextIndex = (currentIndex + 1) % themes.length;
     setTheme(themes[nextIndex]);
   };
+
+  // Render placeholder during SSR to prevent hydration mismatch
+  if (!mounted) {
+    return (
+      <Button
+        variant="ghost"
+        size="icon"
+        className={className}
+        aria-label="Toggle theme"
+      >
+        <Sun className="h-5 w-5" />
+      </Button>
+    );
+  }
 
   if (variant === "icon") {
     return (

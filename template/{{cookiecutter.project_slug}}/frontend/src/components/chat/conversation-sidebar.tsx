@@ -157,7 +157,7 @@ interface ConversationListProps {
 }
 
 function ConversationList({
-  conversations,
+  conversations = [],
   currentConversationId,
   isLoading,
   onSelect,
@@ -167,7 +167,7 @@ function ConversationList({
   onNewChat,
   onNavigate,
 }: ConversationListProps) {
-  const activeConversations = conversations.filter((c) => !c.is_archived);
+  const activeConversations = (conversations ?? []).filter((c) => !c.is_archived);
 
   const handleSelect = (id: string) => {
     onSelect(id);

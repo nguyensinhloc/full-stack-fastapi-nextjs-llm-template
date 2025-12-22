@@ -476,11 +476,18 @@ async def get_current_user_ws(
     if user_id is None:
         await websocket.close(code=4001, reason="Invalid token payload")
         raise AuthenticationError(message="Invalid token payload")
-{%- if cookiecutter.use_postgresql or cookiecutter.use_mongodb %}
+{%- if cookiecutter.use_postgresql %}
 
-    async with get_db_session() as db:
+    from app.db.session import get_db_context
+
+    async with get_db_context() as db:
         user_service = UserService(db)
         user = await user_service.get_by_id(UUID(user_id))
+{%- elif cookiecutter.use_mongodb %}
+
+    db = await get_db_session()
+    user_service = UserService(db)
+    user = await user_service.get_by_id(UUID(user_id))
 {%- elif cookiecutter.use_sqlite %}
 
     with get_db_session() as db:
