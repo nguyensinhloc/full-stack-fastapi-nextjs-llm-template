@@ -7,7 +7,7 @@ Contains database operations for Conversation, Message, and ToolCall entities.
 from datetime import datetime
 from uuid import UUID
 
-from sqlalchemy import select, update as sql_update
+from sqlalchemy import func, select, update as sql_update
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -58,6 +58,26 @@ async def get_conversations_by_user(
     query = query.order_by(Conversation.updated_at.desc()).offset(skip).limit(limit)
     result = await db.execute(query)
     return list(result.scalars().all())
+
+
+async def count_conversations(
+    db: AsyncSession,
+{%- if cookiecutter.use_jwt %}
+    user_id: UUID | None = None,
+{%- endif %}
+    *,
+    include_archived: bool = False,
+) -> int:
+    """Count conversations for a user."""
+    query = select(func.count(Conversation.id))
+{%- if cookiecutter.use_jwt %}
+    if user_id:
+        query = query.where(Conversation.user_id == user_id)
+{%- endif %}
+    if not include_archived:
+        query = query.where(Conversation.is_archived == False)  # noqa: E712
+    result = await db.execute(query)
+    return result.scalar() or 0
 
 
 async def create_conversation(
@@ -146,6 +166,13 @@ async def get_messages_by_conversation(
     query = query.order_by(Message.created_at.asc()).offset(skip).limit(limit)
     result = await db.execute(query)
     return list(result.scalars().all())
+
+
+async def count_messages(db: AsyncSession, conversation_id: UUID) -> int:
+    """Count messages in a conversation."""
+    query = select(func.count(Message.id)).where(Message.conversation_id == conversation_id)
+    result = await db.execute(query)
+    return result.scalar() or 0
 
 
 async def create_message(
@@ -269,7 +296,7 @@ Contains database operations for Conversation, Message, and ToolCall entities.
 
 from datetime import datetime
 
-from sqlalchemy import select, update as sql_update
+from sqlalchemy import func, select, update as sql_update
 from sqlalchemy.orm import Session, selectinload
 
 from app.db.models.conversation import Conversation, Message, ToolCall
@@ -319,6 +346,26 @@ def get_conversations_by_user(
     query = query.order_by(Conversation.updated_at.desc()).offset(skip).limit(limit)
     result = db.execute(query)
     return list(result.scalars().all())
+
+
+def count_conversations(
+    db: Session,
+{%- if cookiecutter.use_jwt %}
+    user_id: str | None = None,
+{%- endif %}
+    *,
+    include_archived: bool = False,
+) -> int:
+    """Count conversations for a user."""
+    query = select(func.count(Conversation.id))
+{%- if cookiecutter.use_jwt %}
+    if user_id:
+        query = query.where(Conversation.user_id == user_id)
+{%- endif %}
+    if not include_archived:
+        query = query.where(Conversation.is_archived == False)  # noqa: E712
+    result = db.execute(query)
+    return result.scalar() or 0
 
 
 def create_conversation(
@@ -407,6 +454,13 @@ def get_messages_by_conversation(
     query = query.order_by(Message.created_at.asc()).offset(skip).limit(limit)
     result = db.execute(query)
     return list(result.scalars().all())
+
+
+def count_messages(db: Session, conversation_id: str) -> int:
+    """Count messages in a conversation."""
+    query = select(func.count(Message.id)).where(Message.conversation_id == conversation_id)
+    result = db.execute(query)
+    return result.scalar() or 0
 
 
 def create_message(
@@ -572,6 +626,25 @@ async def get_conversations_by_user(
     return await Conversation.find(query_filter).sort("-created_at").skip(skip).limit(limit).to_list()
 
 
+async def count_conversations(
+{%- if cookiecutter.use_jwt %}
+    user_id: str | None = None,
+{%- endif %}
+    *,
+    include_archived: bool = False,
+) -> int:
+    """Count conversations for a user."""
+    query_filter = {}
+{%- if cookiecutter.use_jwt %}
+    if user_id:
+        query_filter["user_id"] = user_id
+{%- endif %}
+    if not include_archived:
+        query_filter["is_archived"] = False
+
+    return await Conversation.find(query_filter).count()
+
+
 async def create_conversation(
     *,
 {%- if cookiecutter.use_jwt %}
@@ -653,6 +726,11 @@ async def get_messages_by_conversation(
         .limit(limit)
         .to_list()
     )
+
+
+async def count_messages(conversation_id: str) -> int:
+    """Count messages in a conversation."""
+    return await Message.find(Message.conversation_id == conversation_id).count()
 
 
 async def create_message(

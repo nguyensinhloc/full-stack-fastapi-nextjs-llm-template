@@ -39,7 +39,7 @@ from app.db.models.user import User
 from app.core.config import settings
 {%- endif %}
 {%- if cookiecutter.enable_conversation_persistence and (cookiecutter.use_postgresql or cookiecutter.use_sqlite) %}
-from app.db.session import get_db_session
+from app.db.session import get_db_context
 from app.api.deps import ConversationSvc, get_conversation_service
 from app.schemas.conversation import ConversationCreate, MessageCreate, ToolCallCreate, ToolCallComplete
 {%- elif cookiecutter.enable_conversation_persistence and cookiecutter.use_mongodb %}
@@ -149,7 +149,7 @@ async def agent_websocket(
 
     Persistence: Set 'conversation_id' to continue an existing conversation.
     If not provided, a new conversation is created. The conversation_id is
-    returned in the 'conversation_started' event.
+    returned in the 'conversation_created' event.
 {%- endif %}
     """
 {%- if cookiecutter.websocket_auth_api_key %}
@@ -186,7 +186,7 @@ async def agent_websocket(
             # Handle conversation persistence
             try:
 {%- if cookiecutter.use_postgresql %}
-                async with get_db_session() as db:
+                async with get_db_context() as db:
                     conv_service = get_conversation_service(db)
 
                     # Get or create conversation
@@ -207,7 +207,7 @@ async def agent_websocket(
                         current_conversation_id = str(conversation.id)
                         await manager.send_event(
                             websocket,
-                            "conversation_started",
+                            "conversation_created",
                             {"conversation_id": current_conversation_id},
                         )
 
@@ -237,7 +237,7 @@ async def agent_websocket(
                         current_conversation_id = str(conversation.id)
                         await manager.send_event(
                             websocket,
-                            "conversation_started",
+                            "conversation_created",
                             {"conversation_id": current_conversation_id},
                         )
 
@@ -270,7 +270,7 @@ async def agent_websocket(
                 current_conversation_id = str(conversation.id)
                 await manager.send_event(
                     websocket,
-                    "conversation_started",
+                    "conversation_created",
                     {"conversation_id": current_conversation_id},
                 )
 
@@ -399,7 +399,7 @@ async def agent_websocket(
                 if current_conversation_id and agent_run.result:
                     try:
 {%- if cookiecutter.use_postgresql %}
-                        async with get_db_session() as db:
+                        async with get_db_context() as db:
                             conv_service = get_conversation_service(db)
                             await conv_service.add_message(
                                 UUID(current_conversation_id),
@@ -484,7 +484,7 @@ from app.db.models.user import User
 from app.core.config import settings
 {%- endif %}
 {%- if cookiecutter.enable_conversation_persistence and (cookiecutter.use_postgresql or cookiecutter.use_sqlite) %}
-from app.db.session import get_db_session
+from app.db.session import get_db_context
 from app.api.deps import ConversationSvc, get_conversation_service
 from app.schemas.conversation import ConversationCreate, MessageCreate, ToolCallCreate, ToolCallComplete
 {%- elif cookiecutter.enable_conversation_persistence and cookiecutter.use_mongodb %}
@@ -594,7 +594,7 @@ async def agent_websocket(
 
     Persistence: Set 'conversation_id' to continue an existing conversation.
     If not provided, a new conversation is created. The conversation_id is
-    returned in the 'conversation_started' event.
+    returned in the 'conversation_created' event.
 {%- endif %}
     """
 {%- if cookiecutter.websocket_auth_api_key %}
@@ -635,7 +635,7 @@ async def agent_websocket(
             # Handle conversation persistence
             try:
 {%- if cookiecutter.use_postgresql %}
-                async with get_db_session() as db:
+                async with get_db_context() as db:
                     conv_service = get_conversation_service(db)
 
                     # Get or create conversation
@@ -656,7 +656,7 @@ async def agent_websocket(
                         current_conversation_id = str(conversation.id)
                         await manager.send_event(
                             websocket,
-                            "conversation_started",
+                            "conversation_created",
                             {"conversation_id": current_conversation_id},
                         )
 
@@ -686,7 +686,7 @@ async def agent_websocket(
                         current_conversation_id = str(conversation.id)
                         await manager.send_event(
                             websocket,
-                            "conversation_started",
+                            "conversation_created",
                             {"conversation_id": current_conversation_id},
                         )
 
@@ -719,7 +719,7 @@ async def agent_websocket(
                 current_conversation_id = str(conversation.id)
                 await manager.send_event(
                     websocket,
-                    "conversation_started",
+                    "conversation_created",
                     {"conversation_id": current_conversation_id},
                 )
 
@@ -837,7 +837,7 @@ async def agent_websocket(
                 if current_conversation_id and final_output:
                     try:
 {%- if cookiecutter.use_postgresql %}
-                        async with get_db_session() as db:
+                        async with get_db_context() as db:
                             conv_service = get_conversation_service(db)
                             await conv_service.add_message(
                                 UUID(current_conversation_id),

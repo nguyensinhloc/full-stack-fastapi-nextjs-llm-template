@@ -165,10 +165,8 @@ class ConversationReadWithMessages(ConversationRead):
 class ConversationList(BaseSchema):
     """Schema for listing conversations."""
 
-    conversations: list[ConversationRead]
+    items: list[ConversationRead]
     total: int
-    skip: int
-    limit: int
 
 
 # =============================================================================
@@ -179,9 +177,8 @@ class ConversationList(BaseSchema):
 class MessageList(BaseSchema):
     """Schema for listing messages."""
 
-    messages: list[MessageReadSimple]
+    items: list[MessageReadSimple]
     total: int
-    conversation_id: str
 
 
 class ConversationWithLatestMessage(ConversationRead):

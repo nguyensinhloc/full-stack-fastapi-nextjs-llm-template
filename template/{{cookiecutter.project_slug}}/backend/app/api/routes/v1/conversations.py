@@ -29,10 +29,12 @@ from app.api.deps import CurrentUser
 {%- endif %}
 from app.schemas.conversation import (
     ConversationCreate,
+    ConversationList,
     ConversationRead,
     ConversationReadWithMessages,
     ConversationUpdate,
     MessageCreate,
+    MessageList,
     MessageRead,
     MessageReadSimple,
 )
@@ -43,7 +45,7 @@ router = APIRouter()
 {%- if cookiecutter.use_postgresql %}
 
 
-@router.get("", response_model=list[ConversationRead])
+@router.get("", response_model=ConversationList)
 async def list_conversations(
     conversation_service: ConversationSvc,
 {%- if cookiecutter.use_jwt %}
@@ -57,7 +59,7 @@ async def list_conversations(
 
     Returns conversations ordered by most recently updated.
     """
-    return await conversation_service.list_conversations(
+    items, total = await conversation_service.list_conversations(
 {%- if cookiecutter.use_jwt %}
         user_id=current_user.id,
 {%- endif %}
@@ -65,6 +67,7 @@ async def list_conversations(
         limit=limit,
         include_archived=include_archived,
     )
+    return ConversationList(items=items, total=total)
 
 
 @router.post("", response_model=ConversationRead, status_code=status.HTTP_201_CREATED)
@@ -151,7 +154,7 @@ async def archive_conversation(
     return await conversation_service.archive_conversation(conversation_id)
 
 
-@router.get("/{conversation_id}/messages", response_model=list[MessageReadSimple])
+@router.get("/{conversation_id}/messages", response_model=MessageList)
 async def list_messages(
     conversation_id: UUID,
     conversation_service: ConversationSvc,
@@ -165,7 +168,8 @@ async def list_messages(
 
     Returns messages ordered by creation time (oldest first).
     """
-    return await conversation_service.list_messages(conversation_id, skip=skip, limit=limit)
+    items, total = await conversation_service.list_messages(conversation_id, skip=skip, limit=limit)
+    return MessageList(items=items, total=total)
 
 
 @router.post(
@@ -191,7 +195,7 @@ async def add_message(
 {%- elif cookiecutter.use_sqlite %}
 
 
-@router.get("", response_model=list[ConversationRead])
+@router.get("", response_model=ConversationList)
 def list_conversations(
     conversation_service: ConversationSvc,
 {%- if cookiecutter.use_jwt %}
@@ -205,7 +209,7 @@ def list_conversations(
 
     Returns conversations ordered by most recently updated.
     """
-    return conversation_service.list_conversations(
+    items, total = conversation_service.list_conversations(
 {%- if cookiecutter.use_jwt %}
         user_id=str(current_user.id),
 {%- endif %}
@@ -213,6 +217,7 @@ def list_conversations(
         limit=limit,
         include_archived=include_archived,
     )
+    return ConversationList(items=items, total=total)
 
 
 @router.post("", response_model=ConversationRead, status_code=status.HTTP_201_CREATED)
@@ -299,7 +304,7 @@ def archive_conversation(
     return conversation_service.archive_conversation(conversation_id)
 
 
-@router.get("/{conversation_id}/messages", response_model=list[MessageReadSimple])
+@router.get("/{conversation_id}/messages", response_model=MessageList)
 def list_messages(
     conversation_id: str,
     conversation_service: ConversationSvc,
@@ -313,7 +318,8 @@ def list_messages(
 
     Returns messages ordered by creation time (oldest first).
     """
-    return conversation_service.list_messages(conversation_id, skip=skip, limit=limit)
+    items, total = conversation_service.list_messages(conversation_id, skip=skip, limit=limit)
+    return MessageList(items=items, total=total)
 
 
 @router.post(
@@ -339,7 +345,7 @@ def add_message(
 {%- elif cookiecutter.use_mongodb %}
 
 
-@router.get("", response_model=list[ConversationRead])
+@router.get("", response_model=ConversationList)
 async def list_conversations(
     conversation_service: ConversationSvc,
 {%- if cookiecutter.use_jwt %}
@@ -353,7 +359,7 @@ async def list_conversations(
 
     Returns conversations ordered by most recently updated.
     """
-    return await conversation_service.list_conversations(
+    items, total = await conversation_service.list_conversations(
 {%- if cookiecutter.use_jwt %}
         user_id=str(current_user.id),
 {%- endif %}
@@ -361,6 +367,7 @@ async def list_conversations(
         limit=limit,
         include_archived=include_archived,
     )
+    return ConversationList(items=items, total=total)
 
 
 @router.post("", response_model=ConversationRead, status_code=status.HTTP_201_CREATED)
@@ -447,7 +454,7 @@ async def archive_conversation(
     return await conversation_service.archive_conversation(conversation_id)
 
 
-@router.get("/{conversation_id}/messages", response_model=list[MessageReadSimple])
+@router.get("/{conversation_id}/messages", response_model=MessageList)
 async def list_messages(
     conversation_id: str,
     conversation_service: ConversationSvc,
@@ -461,7 +468,8 @@ async def list_messages(
 
     Returns messages ordered by creation time (oldest first).
     """
-    return await conversation_service.list_messages(conversation_id, skip=skip, limit=limit)
+    items, total = await conversation_service.list_messages(conversation_id, skip=skip, limit=limit)
+    return MessageList(items=items, total=total)
 
 
 @router.post(

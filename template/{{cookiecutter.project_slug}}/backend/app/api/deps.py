@@ -441,16 +441,19 @@ CurrentAdmin = Annotated[User, Depends(RoleChecker(UserRole.ADMIN))]
 
 
 # WebSocket authentication dependency
-from fastapi import WebSocket, Query
+from fastapi import WebSocket, Query, Cookie
 
 
 async def get_current_user_ws(
     websocket: WebSocket,
-    token: str = Query(None, alias="token"),
+    token: str | None = Query(None, alias="token"),
+    access_token: str | None = Cookie(None),
 ) -> User:
     """Get current user from WebSocket JWT token.
 
-    Token should be passed as a query parameter: ws://...?token=<jwt>
+    Token can be passed either as:
+    - Query parameter: ws://...?token=<jwt>
+    - Cookie: access_token cookie (set by HTTP login)
 
     Raises:
         AuthenticationError: If token is invalid or user not found.
@@ -459,11 +462,14 @@ async def get_current_user_ws(
 
     from app.core.security import verify_token
 
-    if not token:
+    # Try query parameter first, then cookie
+    auth_token = token or access_token
+
+    if not auth_token:
         await websocket.close(code=4001, reason="Missing authentication token")
         raise AuthenticationError(message="Missing authentication token")
 
-    payload = verify_token(token)
+    payload = verify_token(auth_token)
     if payload is None:
         await websocket.close(code=4001, reason="Invalid or expired token")
         raise AuthenticationError(message="Invalid or expired token")

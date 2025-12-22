@@ -61,9 +61,13 @@ class ConversationService:
         skip: int = 0,
         limit: int = 50,
         include_archived: bool = False,
-    ) -> list[Conversation]:
-        """List conversations with pagination."""
-        return await conversation_repo.get_conversations_by_user(
+    ) -> tuple[list[Conversation], int]:
+        """List conversations with pagination.
+
+        Returns:
+            Tuple of (conversations, total_count).
+        """
+        items = await conversation_repo.get_conversations_by_user(
             self.db,
 {%- if cookiecutter.use_jwt %}
             user_id=user_id,
@@ -72,6 +76,14 @@ class ConversationService:
             limit=limit,
             include_archived=include_archived,
         )
+        total = await conversation_repo.count_conversations(
+            self.db,
+{%- if cookiecutter.use_jwt %}
+            user_id=user_id,
+{%- endif %}
+            include_archived=include_archived,
+        )
+        return items, total
 
     async def create_conversation(
         self,
@@ -157,17 +169,23 @@ class ConversationService:
         skip: int = 0,
         limit: int = 100,
         include_tool_calls: bool = False,
-    ) -> list[Message]:
-        """List messages in a conversation."""
+    ) -> tuple[list[Message], int]:
+        """List messages in a conversation.
+
+        Returns:
+            Tuple of (messages, total_count).
+        """
         # Verify conversation exists
         await self.get_conversation(conversation_id)
-        return await conversation_repo.get_messages_by_conversation(
+        items = await conversation_repo.get_messages_by_conversation(
             self.db,
             conversation_id,
             skip=skip,
             limit=limit,
             include_tool_calls=include_tool_calls,
         )
+        total = await conversation_repo.count_messages(self.db, conversation_id)
+        return items, total
 
     async def add_message(
         self,
@@ -331,9 +349,13 @@ class ConversationService:
         skip: int = 0,
         limit: int = 50,
         include_archived: bool = False,
-    ) -> list[Conversation]:
-        """List conversations with pagination."""
-        return conversation_repo.get_conversations_by_user(
+    ) -> tuple[list[Conversation], int]:
+        """List conversations with pagination.
+
+        Returns:
+            Tuple of (conversations, total_count).
+        """
+        items = conversation_repo.get_conversations_by_user(
             self.db,
 {%- if cookiecutter.use_jwt %}
             user_id=user_id,
@@ -342,6 +364,14 @@ class ConversationService:
             limit=limit,
             include_archived=include_archived,
         )
+        total = conversation_repo.count_conversations(
+            self.db,
+{%- if cookiecutter.use_jwt %}
+            user_id=user_id,
+{%- endif %}
+            include_archived=include_archived,
+        )
+        return items, total
 
     def create_conversation(
         self,
@@ -425,17 +455,23 @@ class ConversationService:
         skip: int = 0,
         limit: int = 100,
         include_tool_calls: bool = False,
-    ) -> list[Message]:
-        """List messages in a conversation."""
+    ) -> tuple[list[Message], int]:
+        """List messages in a conversation.
+
+        Returns:
+            Tuple of (messages, total_count).
+        """
         # Verify conversation exists
         self.get_conversation(conversation_id)
-        return conversation_repo.get_messages_by_conversation(
+        items = conversation_repo.get_messages_by_conversation(
             self.db,
             conversation_id,
             skip=skip,
             limit=limit,
             include_tool_calls=include_tool_calls,
         )
+        total = conversation_repo.count_messages(self.db, conversation_id)
+        return items, total
 
     def add_message(
         self,
@@ -594,9 +630,13 @@ class ConversationService:
         skip: int = 0,
         limit: int = 50,
         include_archived: bool = False,
-    ) -> list[Conversation]:
-        """List conversations with pagination."""
-        return await conversation_repo.get_conversations_by_user(
+    ) -> tuple[list[Conversation], int]:
+        """List conversations with pagination.
+
+        Returns:
+            Tuple of (conversations, total_count).
+        """
+        items = await conversation_repo.get_conversations_by_user(
 {%- if cookiecutter.use_jwt %}
             user_id=user_id,
 {%- endif %}
@@ -604,6 +644,13 @@ class ConversationService:
             limit=limit,
             include_archived=include_archived,
         )
+        total = await conversation_repo.count_conversations(
+{%- if cookiecutter.use_jwt %}
+            user_id=user_id,
+{%- endif %}
+            include_archived=include_archived,
+        )
+        return items, total
 
     async def create_conversation(
         self,
@@ -685,15 +732,21 @@ class ConversationService:
         *,
         skip: int = 0,
         limit: int = 100,
-    ) -> list[Message]:
-        """List messages in a conversation."""
+    ) -> tuple[list[Message], int]:
+        """List messages in a conversation.
+
+        Returns:
+            Tuple of (messages, total_count).
+        """
         # Verify conversation exists
         await self.get_conversation(conversation_id)
-        return await conversation_repo.get_messages_by_conversation(
+        items = await conversation_repo.get_messages_by_conversation(
             conversation_id,
             skip=skip,
             limit=limit,
         )
+        total = await conversation_repo.count_messages(conversation_id)
+        return items, total
 
     async def add_message(
         self,

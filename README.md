@@ -137,34 +137,84 @@ fastapi-fullstack create my_ai_app --minimal
 
 ### Start Development
 
+After generating your project, follow these steps:
+
+#### 1. Install dependencies
+
 ```bash
 cd my_ai_app
+make install
+```
 
-# Backend
-cd backend
-uv sync
-# .env is pre-configured for development - just add your API keys
-alembic upgrade head
+#### 2. Start the database
 
-# Create admin user
-uv run my_ai_app user create --email admin@example.com --password secret123 --superuser
+```bash
+# PostgreSQL (with Docker)
+make docker-db
+```
 
-# Start server
-uv run uvicorn app.main:app --reload
+#### 3. Create and apply database migrations
 
-# Frontend (new terminal)
+```bash
+# Create initial migration (first time only)
+make db-migrate
+# Enter message: "Initial migration"
+
+# Apply migrations to create tables
+make db-upgrade
+```
+
+#### 4. Create admin user
+
+```bash
+make create-admin
+# Enter email and password when prompted
+```
+
+#### 5. Start the backend
+
+```bash
+make run
+```
+
+#### 6. Start the frontend (new terminal)
+
+```bash
 cd frontend
 bun install
 bun dev
 ```
 
-> **Note:** The admin user is required to access the SQLAdmin panel at `/admin`. Use the `--superuser` flag to grant full admin privileges.
-
 **Access:**
 - API: http://localhost:8000
 - Docs: http://localhost:8000/docs
-- Admin Panel: http://localhost:8000/admin
+- Admin Panel: http://localhost:8000/admin (login with admin user)
 - Frontend: http://localhost:3000
+
+### Quick Start with Docker
+
+Run everything in Docker:
+
+```bash
+make docker-up       # Start backend + database
+make docker-frontend # Start frontend
+```
+
+### Using the Project CLI
+
+Each generated project has a CLI named after your `project_slug`. For example, if you created `my_ai_app`:
+
+```bash
+cd backend
+
+# The CLI command is: uv run <project_slug> <command>
+uv run my_ai_app server run --reload     # Start dev server
+uv run my_ai_app db migrate -m "message" # Create migration
+uv run my_ai_app db upgrade              # Apply migrations
+uv run my_ai_app user create-admin       # Create admin user
+```
+
+Use `make help` to see all available Makefile shortcuts.
 
 ---
 
@@ -611,6 +661,7 @@ fastapi-fullstack new
 | [Observability](https://github.com/vstorm-co/full-stack-fastapi-nextjs-llm-template/blob/main/docs/observability.md) | Logfire integration, tracing, metrics |
 | [Deployment](https://github.com/vstorm-co/full-stack-fastapi-nextjs-llm-template/blob/main/docs/deployment.md) | Docker, Kubernetes, production setup |
 | [Development](https://github.com/vstorm-co/full-stack-fastapi-nextjs-llm-template/blob/main/docs/development.md) | Local setup, testing, debugging |
+| [Changelog](https://github.com/vstorm-co/full-stack-fastapi-nextjs-llm-template/blob/main/docs/CHANGELOG.md) | Version history and release notes |
 
 ---
 

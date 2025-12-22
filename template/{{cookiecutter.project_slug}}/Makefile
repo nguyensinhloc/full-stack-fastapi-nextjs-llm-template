@@ -93,6 +93,10 @@ routes:
 {%- if cookiecutter.use_jwt %}
 
 # === Users ===
+create-admin:
+	@echo "Creating admin user..."
+	uv run --directory backend {{ cookiecutter.project_slug }} user create-admin
+
 user-create:
 	uv run --directory backend {{ cookiecutter.project_slug }} user create
 
@@ -264,6 +268,7 @@ help:
 {%- endif %}
 {%- if cookiecutter.use_jwt %}
 	@echo "Users:"
+	@echo "  make create-admin  Create admin user (for SQLAdmin access)"
 	@echo "  make user-create   Create new user (interactive)"
 	@echo "  make user-list     List all users"
 	@echo ""
