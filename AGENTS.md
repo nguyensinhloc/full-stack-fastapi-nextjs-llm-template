@@ -1,6 +1,6 @@
 # AGENTS.md
 
-This file provides guidance for AI coding agents (Codex, Copilot, Cursor, Zed, OpenCode) working with this repository.
+Guidance for AI coding agents (Codex, Copilot, Cursor, Zed, OpenCode) working with this repository.
 
 ## Project Overview
 
@@ -15,7 +15,10 @@ uv sync
 # Run tests
 pytest
 
-# Linting and formatting
+# Run a single test file
+pytest tests/test_cli.py -v
+
+# Linting and formatting (always run before committing)
 ruff check . --fix
 ruff format .
 
@@ -40,33 +43,59 @@ fastapi-fullstack create my_project --minimal
 
 ### Core Modules (`fastapi_gen/`)
 
-- **cli.py** - Click-based CLI with commands: `new`, `create`, `templates`
-- **config.py** - Pydantic models for configuration options
-- **prompts.py** - Interactive prompts using Questionary
-- **generator.py** - Cookiecutter invocation and messaging
+| Module | Purpose |
+|--------|---------|
+| `cli.py` | Click-based CLI with commands: `new`, `create`, `templates` |
+| `config.py` | Pydantic models for configuration options |
+| `prompts.py` | Interactive prompts using Questionary |
+| `generator.py` | Cookiecutter invocation and messaging |
 
 ### Template System (`template/`)
 
 ```
 template/
 ├── cookiecutter.json                    # Default context (~75 variables)
-├── hooks/post_gen_project.py            # Post-gen cleanup
+├── hooks/post_gen_project.py            # Post-generation cleanup
 └── {{cookiecutter.project_slug}}/
     ├── backend/app/                     # FastAPI application
     └── frontend/                        # Next.js 15 (optional)
 ```
 
-Template files use `{% if cookiecutter.use_jwt %}` style conditionals.
+Template files use Jinja2 conditionals: `{% if cookiecutter.use_jwt %}...{% endif %}`
 
 ## Key Design Decisions
 
-- All database options except SQLite are async (asyncpg, motor)
-- Project names must match pattern `^[a-z][a-z0-9_]*$`
-- Generated projects use UV for package management
-- Template uses repository pattern for data access
+- **Async-first**: All database options except SQLite use async drivers (asyncpg, motor)
+- **Naming**: Project names must match `^[a-z][a-z0-9_]*$`
+- **Package management**: Generated projects use UV
+- **Data access**: Repository pattern throughout
 
-## Where to Find More Info
+## Testing Guidelines
 
-- Template variables: `template/cookiecutter.json`
-- Post-generation logic: `template/hooks/post_gen_project.py`
-- Sprint tasks: `notes/sprint_0_1_7/`
+- Tests live in `tests/` and mirror the `fastapi_gen/` structure
+- Use `pytest` fixtures from `conftest.py` for common setup
+- Template generation tests should use temporary directories
+- Run the full test suite before submitting changes
+
+## Common Tasks
+
+**Adding a new CLI option:**
+1. Add the option to `config.py` (Pydantic model)
+2. Add the prompt to `prompts.py`
+3. Update `cookiecutter.json` with the new variable
+4. Add conditional logic to relevant template files
+
+**Modifying template output:**
+1. Edit files under `template/{{cookiecutter.project_slug}}/`
+2. Use `{% if cookiecutter.variable %}` for conditional content
+3. Test with `fastapi-fullstack create test_project --<relevant-flags>`
+4. Check `hooks/post_gen_project.py` if files need conditional deletion
+
+## Reference
+
+| Resource | Location |
+|----------|----------|
+| Template variables | `template/cookiecutter.json` |
+| Post-generation hooks | `template/hooks/post_gen_project.py` |
+| Sprint planning | `notes/sprint_0_1_7/` |
+| CLI help | `fastapi-fullstack --help` |
