@@ -687,6 +687,54 @@ class TestOptionCombinationValidation:
         assert context["use_langchain"] is False
         assert context["use_langgraph"] is False
 
+    def test_openrouter_with_deepagents_raises_validation_error(self) -> None:
+        """Test that OpenRouter + DeepAgents combination is rejected."""
+        with pytest.raises(ValidationError) as exc_info:
+            ProjectConfig(
+                project_name="test",
+                enable_ai_agent=True,
+                llm_provider=LLMProviderType.OPENROUTER,
+                ai_framework=AIFrameworkType.DEEPAGENTS,
+            )
+        assert "DeepAgents does not support OpenRouter" in str(exc_info.value)
+
+    def test_deepagents_with_openai_is_valid(self) -> None:
+        """Test that DeepAgents + OpenAI combination is accepted."""
+        config = ProjectConfig(
+            project_name="test",
+            enable_ai_agent=True,
+            llm_provider=LLMProviderType.OPENAI,
+            ai_framework=AIFrameworkType.DEEPAGENTS,
+        )
+        assert config.ai_framework == AIFrameworkType.DEEPAGENTS
+        assert config.llm_provider == LLMProviderType.OPENAI
+
+    def test_deepagents_with_anthropic_is_valid(self) -> None:
+        """Test that DeepAgents + Anthropic combination is accepted."""
+        config = ProjectConfig(
+            project_name="test",
+            enable_ai_agent=True,
+            llm_provider=LLMProviderType.ANTHROPIC,
+            ai_framework=AIFrameworkType.DEEPAGENTS,
+        )
+        assert config.ai_framework == AIFrameworkType.DEEPAGENTS
+        assert config.llm_provider == LLMProviderType.ANTHROPIC
+
+    def test_deepagents_framework_context_flags(self) -> None:
+        """Test that DeepAgents framework sets correct context flags."""
+        config = ProjectConfig(
+            project_name="test",
+            enable_ai_agent=True,
+            ai_framework=AIFrameworkType.DEEPAGENTS,
+        )
+        context = config.to_cookiecutter_context()
+
+        assert context["use_deepagents"] is True
+        assert context["use_pydantic_ai"] is False
+        assert context["use_langchain"] is False
+        assert context["use_langgraph"] is False
+        assert context["use_crewai"] is False
+
 
 class TestEmailValidation:
     """Tests for author_email validation."""

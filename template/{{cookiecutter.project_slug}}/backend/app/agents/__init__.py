@@ -38,6 +38,17 @@ Agents work together in a team to accomplish complex tasks.
 from app.agents.crewai_assistant import CrewAIAssistant, CrewConfig, CrewContext
 
 __all__ = ["CrewAIAssistant", "CrewConfig", "CrewContext"]
+{%- elif cookiecutter.enable_ai_agent and cookiecutter.use_deepagents %}
+"""AI Agents module using DeepAgents.
+
+This module contains an agentic coding assistant built with DeepAgents.
+DeepAgents provides built-in tools for filesystem operations, task management,
+and code execution.
+"""
+
+from app.agents.deepagents_assistant import AgentContext, AgentState, DeepAgentsAssistant
+
+__all__ = ["DeepAgentsAssistant", "AgentContext", "AgentState"]
 {%- else %}
 """AI Agents - not configured."""
 {%- endif %}

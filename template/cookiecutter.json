@@ -63,6 +63,7 @@
   "use_langchain": false,
   "use_langgraph": false,
   "use_crewai": false,
+  "use_deepagents": false,
   "llm_provider": "openai",
   "use_openai": true,
   "use_anthropic": false,

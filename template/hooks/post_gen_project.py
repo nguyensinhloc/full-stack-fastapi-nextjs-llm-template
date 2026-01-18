@@ -24,6 +24,7 @@ use_pydantic_ai = "{{ cookiecutter.use_pydantic_ai }}" == "True"
 use_langchain = "{{ cookiecutter.use_langchain }}" == "True"
 use_langgraph = "{{ cookiecutter.use_langgraph }}" == "True"
 use_crewai = "{{ cookiecutter.use_crewai }}" == "True"
+use_deepagents = "{{ cookiecutter.use_deepagents }}" == "True"
 enable_admin_panel = "{{ cookiecutter.enable_admin_panel }}" == "True"
 enable_websockets = "{{ cookiecutter.enable_websockets }}" == "True"
 enable_redis = "{{ cookiecutter.enable_redis }}" == "True"
@@ -99,6 +100,8 @@ else:
         remove_file(os.path.join(backend_app, "agents", "langgraph_assistant.py"))
     if not use_crewai:
         remove_file(os.path.join(backend_app, "agents", "crewai_assistant.py"))
+    if not use_deepagents:
+        remove_file(os.path.join(backend_app, "agents", "deepagents_assistant.py"))
 
 # --- Example CRUD files ---
 if not include_example_crud or not use_database:

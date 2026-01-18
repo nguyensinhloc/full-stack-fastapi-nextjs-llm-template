@@ -14,6 +14,7 @@
 {%- if cookiecutter.enable_ai_agent and cookiecutter.use_langchain %}, LangChain{%- endif %}
 {%- if cookiecutter.enable_ai_agent and cookiecutter.use_langgraph %}, LangGraph{%- endif %}
 {%- if cookiecutter.enable_ai_agent and cookiecutter.use_crewai %}, CrewAI{%- endif %}
+{%- if cookiecutter.enable_ai_agent and cookiecutter.use_deepagents %}, DeepAgents{%- endif %}
 {%- if cookiecutter.use_celery %}, Celery{%- endif %}
 {%- if cookiecutter.use_taskiq %}, Taskiq{%- endif %}
 {%- if cookiecutter.use_frontend %}, Next.js 15{%- endif %}

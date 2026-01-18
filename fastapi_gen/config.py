@@ -91,6 +91,7 @@ class AIFrameworkType(str, Enum):
     LANGCHAIN = "langchain"
     LANGGRAPH = "langgraph"
     CREWAI = "crewai"
+    DEEPAGENTS = "deepagents"
 
 
 class LLMProviderType(str, Enum):
@@ -278,6 +279,14 @@ class ProjectConfig(BaseModel):
         ):
             raise ValueError("OpenRouter is not supported with CrewAI")
         if (
+            self.enable_ai_agent
+            and self.ai_framework == AIFrameworkType.DEEPAGENTS
+            and self.llm_provider == LLMProviderType.OPENROUTER
+        ):
+            raise ValueError(
+                "DeepAgents does not support OpenRouter. Use OpenAI or Anthropic provider instead."
+            )
+        if (
             self.enable_rate_limiting
             and self.rate_limit_storage == RateLimitStorageType.REDIS
             and not self.enable_redis
@@ -448,6 +457,7 @@ class ProjectConfig(BaseModel):
             "use_langchain": self.ai_framework == AIFrameworkType.LANGCHAIN,
             "use_langgraph": self.ai_framework == AIFrameworkType.LANGGRAPH,
             "use_crewai": self.ai_framework == AIFrameworkType.CREWAI,
+            "use_deepagents": self.ai_framework == AIFrameworkType.DEEPAGENTS,
             "llm_provider": self.llm_provider.value,
             "use_openai": self.llm_provider == LLMProviderType.OPENAI,
             "use_anthropic": self.llm_provider == LLMProviderType.ANTHROPIC,

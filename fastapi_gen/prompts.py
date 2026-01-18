@@ -616,6 +616,7 @@ def prompt_ai_framework() -> AIFrameworkType:
         questionary.Choice("LangChain", value=AIFrameworkType.LANGCHAIN),
         questionary.Choice("LangGraph (ReAct agent)", value=AIFrameworkType.LANGGRAPH),
         questionary.Choice("CrewAI (multi-agent crews)", value=AIFrameworkType.CREWAI),
+        questionary.Choice("DeepAgents (agentic coding)", value=AIFrameworkType.DEEPAGENTS),
     ]
 
     return cast(
@@ -635,7 +636,7 @@ def prompt_llm_provider(ai_framework: AIFrameworkType) -> LLMProviderType:
 
     Args:
         ai_framework: The selected AI framework. OpenRouter is only
-            available for PydanticAI (not LangChain, LangGraph, or CrewAI).
+            available for PydanticAI (not LangChain, LangGraph, CrewAI, or DeepAgents).
     """
     console.print()
     console.print("[bold cyan]LLM Provider[/]")
