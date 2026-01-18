@@ -6,8 +6,8 @@ Thank you for your interest in contributing to fastapi-fullstack!
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/your-username/fastapi-fullstack.git
-   cd fastapi-fullstack
+   git clone https://github.com/vstorm-co/full-stack-fastapi-nextjs-llm-template.git
+   cd full-stack-fastapi-nextjs-llm-template
    ```
 
 2. Install dependencies:

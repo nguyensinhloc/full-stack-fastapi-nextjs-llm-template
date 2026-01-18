@@ -4,7 +4,7 @@ import { useCallback, useRef, useState } from "react";
 import { nanoid } from "nanoid";
 import { useWebSocket } from "./use-websocket";
 import { useChatStore } from "@/stores";
-import type { ChatMessage, ToolCall, WSEvent } from "@/types";
+import type { ChatMessage, ToolCall, WSEvent, PendingApproval, Decision } from "@/types";
 import { WS_URL } from "@/lib/constants";
 {%- if cookiecutter.enable_conversation_persistence and cookiecutter.use_database %}
 import { useConversationStore } from "@/stores";
@@ -35,6 +35,8 @@ export function useChat() {
   const [currentMessageId, setCurrentMessageId] = useState<string | null>(null);
   // Use ref for groupId to avoid React state timing issues with rapid WebSocket events
   const currentGroupIdRef = useRef<string | null>(null);
+  // Human-in-the-Loop: pending tool approval state
+  const [pendingApproval, setPendingApproval] = useState<PendingApproval | null>(null);
 
   const handleWebSocketMessage = useCallback(
     (event: MessageEvent) => {
@@ -289,6 +291,35 @@ export function useChat() {
           break;
         }
 
+        case "tool_approval_required": {
+          // Human-in-the-Loop: AI wants to execute tools that need approval
+          const { action_requests, review_configs } = wsEvent.data as {
+            action_requests: Array<{
+              id: string;
+              tool_name: string;
+              args: Record<string, unknown>;
+            }>;
+            review_configs: Array<{
+              tool_name: string;
+              allow_edit?: boolean;
+              timeout?: number;
+            }>;
+          };
+          setPendingApproval({
+            actionRequests: action_requests,
+            reviewConfigs: review_configs,
+          });
+          // Show pending tools in the current message
+          if (currentMessageId) {
+            const toolNames = action_requests.map((ar) => ar.tool_name).join(", ");
+            updateMessage(currentMessageId, (msg) => ({
+              ...msg,
+              content: msg.content + `\n\n⏸️ Waiting for approval: ${toolNames}`,
+            }));
+          }
+          break;
+        }
+
         case "complete": {
           setIsProcessing(false);
           break;
@@ -338,6 +369,49 @@ export function useChat() {
 {%- endif %}
   );
 
+  // Human-in-the-Loop: send resume message with user decisions
+  const sendResumeDecisions = useCallback(
+    (decisions: Decision[]) => {
+      // Clear pending approval state
+      setPendingApproval(null);
+
+      // Update message to show decisions were made
+      if (currentMessageId) {
+        const approvedCount = decisions.filter((d) => d.type === "approve").length;
+        const editedCount = decisions.filter((d) => d.type === "edit").length;
+        const rejectedCount = decisions.filter((d) => d.type === "reject").length;
+
+        const summaryParts: string[] = [];
+        if (approvedCount > 0) summaryParts.push(`${approvedCount} approved`);
+        if (editedCount > 0) summaryParts.push(`${editedCount} edited`);
+        if (rejectedCount > 0) summaryParts.push(`${rejectedCount} rejected`);
+
+        updateMessage(currentMessageId, (msg) => ({
+          ...msg,
+          content: msg.content.replace(
+            /\n\n⏸️ Waiting for approval:.*$/,
+            `\n\n✅ Decisions: ${summaryParts.join(", ")}`
+          ),
+        }));
+      }
+
+      // Send resume message to WebSocket
+      sendMessage({
+        type: "resume",
+        decisions: decisions.map((d) => {
+          if (d.type === "edit" && d.editedAction) {
+            return {
+              type: "edit",
+              edited_action: d.editedAction,
+            };
+          }
+          return { type: d.type };
+        }),
+      });
+    },
+    [currentMessageId, updateMessage, sendMessage]
+  );
+
   return {
     messages,
     isConnected,
@@ -346,5 +420,8 @@ export function useChat() {
     disconnect,
     sendMessage: sendChatMessage,
     clearMessages,
+    // Human-in-the-Loop support
+    pendingApproval,
+    sendResumeDecisions,
   };
 }

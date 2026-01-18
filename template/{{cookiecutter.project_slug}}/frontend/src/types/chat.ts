@@ -41,6 +41,8 @@ export type WSEventType =
   | "error"
   | "conversation_created"
   | "message_saved"
+  // DeepAgents Human-in-the-Loop event
+  | "tool_approval_required"
   // CrewAI-specific events
   | "crew_start"
   | "crew_started"
@@ -95,4 +97,43 @@ export interface ChatState {
   messages: ChatMessage[];
   isConnected: boolean;
   isProcessing: boolean;
+}
+
+// Human-in-the-Loop (HITL) types for DeepAgents
+export interface ActionRequest {
+  id: string;
+  tool_name: string;
+  args: Record<string, unknown>;
+}
+
+export interface ReviewConfig {
+  tool_name: string;
+  /** Whether to allow editing the tool arguments */
+  allow_edit?: boolean;
+  /** Maximum time to wait for decision (seconds) */
+  timeout?: number;
+}
+
+export interface PendingApproval {
+  actionRequests: ActionRequest[];
+  reviewConfigs: ReviewConfig[];
+}
+
+export type DecisionType = "approve" | "edit" | "reject";
+
+export interface Decision {
+  type: DecisionType;
+  editedAction?: {
+    id: string;
+    tool_name: string;
+    args: Record<string, unknown>;
+  };
+}
+
+export interface ToolApprovalRequiredEvent {
+  type: "tool_approval_required";
+  data: {
+    action_requests: ActionRequest[];
+    review_configs: ReviewConfig[];
+  };
 }

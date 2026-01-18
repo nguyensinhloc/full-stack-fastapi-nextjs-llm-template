@@ -261,6 +261,22 @@ class Settings(BaseSettings):
     LANGCHAIN_PROJECT: str = "{{ cookiecutter.project_slug }}"
     LANGCHAIN_ENDPOINT: str = "https://api.smith.langchain.com"
 {%- endif %}
+{%- if cookiecutter.use_deepagents %}
+
+    # === DeepAgents Configuration ===
+    # Skills paths (comma-separated, relative to backend dir)
+    DEEPAGENTS_SKILLS_PATHS: str | None = None  # e.g. "/skills/user/,/skills/project/"
+    # Enable built-in tools
+    DEEPAGENTS_ENABLE_FILESYSTEM: bool = True  # ls, read_file, write_file, edit_file, glob, grep
+    DEEPAGENTS_ENABLE_EXECUTE: bool = False  # shell execution (disabled by default for security)
+    DEEPAGENTS_ENABLE_TODOS: bool = True  # write_todos tool
+    DEEPAGENTS_ENABLE_SUBAGENTS: bool = True  # task tool for spawning subagents
+    # Human-in-the-loop: tools requiring approval (comma-separated)
+    # e.g. "write_file,edit_file,execute" or "all" for all tools
+    DEEPAGENTS_INTERRUPT_TOOLS: str | None = None
+    # Allowed decisions for interrupted tools: approve,edit,reject
+    DEEPAGENTS_ALLOWED_DECISIONS: str = "approve,edit,reject"
+{%- endif %}
 {%- endif %}
 
 {%- if cookiecutter.enable_cors %}

@@ -5,6 +5,70 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.15] - 2026-01-18
+
+### Added
+
+#### DeepAgents Framework Support
+
+- **DeepAgents as fifth AI framework option** alongside PydanticAI, LangChain, LangGraph, and CrewAI
+- New `--ai-framework deepagents` CLI option for project creation
+- Interactive prompt includes "DeepAgents" choice
+- **Built-in tools** for file operations, code execution, and task management:
+  - `ls`, `read_file`, `write_file`, `edit_file`, `glob`, `grep`
+  - `execute` (disabled by default for safety)
+  - `write_todos`, `task` (sub-agents)
+- **StateBackend** for in-memory file state management
+- **Skills support** via `DEEPAGENTS_SKILLS_PATHS` environment variable
+- New template files:
+  - `app/agents/deepagents_assistant.py` - DeepAgentsAssistant class with run() and stream()
+  - WebSocket route implementation with interrupt handling
+- New cookiecutter variable: `use_deepagents`
+- Dependencies: `deepagents>=0.1.0`
+
+#### Human-in-the-Loop (HITL) Support
+
+- **Tool approval workflow** for DeepAgents allowing users to approve, edit, or reject tool calls
+- Configurable via `DEEPAGENTS_INTERRUPT_TOOLS` environment variable:
+  - Comma-separated tool names (e.g., `write_file,edit_file,execute`)
+  - Or `all` to require approval for all tools
+- **Frontend tool approval dialog** (`tool-approval-dialog.tsx`):
+  - Shows pending tool calls with JSON args in editable textarea
+  - Cancel/Save buttons for editing args
+  - Submit button to send decisions
+  - Auto-detects changes and sends appropriate decision (approve/edit/reject)
+- **WebSocket protocol** for interrupt handling:
+  - Backend sends `tool_approval_required` event with action requests
+  - Frontend sends `resume` message with user decisions
+  - Thread ID management for state persistence across interrupts
+- New types in `chat.ts`: `ActionRequest`, `ReviewConfig`, `PendingApproval`, `Decision`
+- Updated hooks (`use-chat.ts`, `use-local-chat.ts`) with:
+  - `pendingApproval` state
+  - `sendResumeDecisions()` function
+- Environment variables:
+  - `DEEPAGENTS_INTERRUPT_TOOLS` - tools requiring approval
+  - `DEEPAGENTS_ALLOWED_DECISIONS` - allowed decision types (approve, edit, reject)
+
+### Fixed
+
+- **OAuth requires JWT authentication** - Added validation that OAuth providers (Google) require JWT auth to be enabled, preventing invalid configuration combinations
+
+### Changed
+
+- **`AIFrameworkType` enum** extended with `DEEPAGENTS` value
+- **AI framework prompt** now shows five options: PydanticAI, LangChain, LangGraph, CrewAI, DeepAgents
+- **LLM provider validation** - OpenRouter not supported with DeepAgents (uses LangChain providers directly)
+- **`VARIABLES.md`** updated with `use_deepagents` documentation
+- **Template `CLAUDE.md`** includes DeepAgents in stack section
+- **`CONTRIBUTING.md`** updated with correct repository URL
+
+### Tests Added
+
+- Tests for `DEEPAGENTS` enum value
+- Tests for DeepAgents + OpenRouter validation (combination is rejected)
+- Tests for `use_deepagents` computed field
+- Tests for cookiecutter context generation with DeepAgents
+
 ## [0.1.14] - 2026-01-16
 
 ### Fixed

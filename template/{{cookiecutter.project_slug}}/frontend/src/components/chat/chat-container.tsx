@@ -4,8 +4,10 @@ import { useEffect, useRef, useCallback } from "react";
 import { useChat, useLocalChat } from "@/hooks";
 import { MessageList } from "./message-list";
 import { ChatInput } from "./chat-input";
+import { ToolApprovalDialog } from "./tool-approval-dialog";
 import { Button } from "@/components/ui";
 import { Wifi, WifiOff, RotateCcw, Bot } from "lucide-react";
+import type { PendingApproval, Decision } from "@/types";
 {%- if cookiecutter.enable_conversation_persistence and cookiecutter.use_database %}
 import { useConversationStore, useChatStore, useAuthStore } from "@/stores";
 import { useConversations } from "@/hooks";
@@ -46,6 +48,8 @@ function AuthenticatedChatContainer() {
     disconnect,
     sendMessage,
     clearMessages,
+    pendingApproval,
+    sendResumeDecisions,
   } = useChat({
     conversationId: currentConversationId,
     onConversationCreated: handleConversationCreated,
@@ -118,6 +122,8 @@ function AuthenticatedChatContainer() {
       sendMessage={sendMessage}
       clearMessages={clearMessages}
       messagesEndRef={messagesEndRef}
+      pendingApproval={pendingApproval}
+      onResumeDecisions={sendResumeDecisions}
     />
   );
 }
@@ -132,6 +138,8 @@ function LocalChatContainer() {
     disconnect,
     sendMessage,
     clearMessages,
+    pendingApproval,
+    sendResumeDecisions,
   } = useLocalChat();
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -153,6 +161,8 @@ function LocalChatContainer() {
       sendMessage={sendMessage}
       clearMessages={clearMessages}
       messagesEndRef={messagesEndRef}
+      pendingApproval={pendingApproval}
+      onResumeDecisions={sendResumeDecisions}
     />
   );
 }
@@ -170,6 +180,9 @@ interface ChatUIProps {
   sendMessage: (content: string) => void;
   clearMessages: () => void;
   messagesEndRef: React.RefObject<HTMLDivElement | null>;
+  // Human-in-the-Loop support
+  pendingApproval?: PendingApproval | null;
+  onResumeDecisions?: (decisions: Decision[]) => void;
 }
 
 function ChatUI({
@@ -179,6 +192,8 @@ function ChatUI({
   sendMessage,
   clearMessages,
   messagesEndRef,
+  pendingApproval,
+  onResumeDecisions,
 }: ChatUIProps) {
   return (
     <div className="flex flex-col h-full max-w-4xl mx-auto w-full">
@@ -199,11 +214,23 @@ function ChatUI({
         <div ref={messagesEndRef} />
       </div>
 
+      {/* Human-in-the-Loop: Tool Approval Dialog */}
+      {pendingApproval && onResumeDecisions && (
+        <div className="px-2 pb-2 sm:px-4 sm:pb-2">
+          <ToolApprovalDialog
+            actionRequests={pendingApproval.actionRequests}
+            reviewConfigs={pendingApproval.reviewConfigs}
+            onDecisions={onResumeDecisions}
+            disabled={!isConnected}
+          />
+        </div>
+      )}
+
       <div className="px-2 pb-2 sm:px-4 sm:pb-4">
         <div className="rounded-xl border bg-card shadow-sm p-3 sm:p-4">
           <ChatInput
             onSend={sendMessage}
-            disabled={!isConnected || isProcessing}
+            disabled={!isConnected || isProcessing || !!pendingApproval}
             isProcessing={isProcessing}
           />
           <div className="flex items-center justify-between mt-3 pt-3 border-t">

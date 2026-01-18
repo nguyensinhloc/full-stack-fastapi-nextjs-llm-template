@@ -1801,9 +1801,10 @@ async def agent_websocket(
     finally:
         manager.disconnect(websocket)
 {%- elif cookiecutter.enable_ai_agent and cookiecutter.use_deepagents %}
-"""AI Agent WebSocket routes with streaming support (DeepAgents)."""
+"""AI Agent WebSocket routes with streaming and human-in-the-loop support (DeepAgents)."""
 
 import logging
+import uuid
 from typing import Any
 {%- if cookiecutter.enable_conversation_persistence and cookiecutter.use_database %}
 from datetime import datetime, UTC
@@ -1816,7 +1817,7 @@ from fastapi import APIRouter, WebSocket, WebSocketDisconnect{%- if cookiecutter
 
 from langchain_core.messages import AIMessage, AIMessageChunk, HumanMessage, SystemMessage, ToolMessage
 
-from app.agents.deepagents_assistant import AgentContext, get_agent
+from app.agents.deepagents_assistant import AgentContext, Decision, InterruptData, get_agent
 {%- if cookiecutter.websocket_auth_jwt %}
 from app.api.deps import get_current_user_ws
 from app.db.models.user import User
@@ -1906,7 +1907,7 @@ async def agent_websocket(
     api_key: str = Query(..., alias="api_key"),
 {%- endif %}
 ) -> None:
-    """WebSocket endpoint for DeepAgents with streaming support.
+    """WebSocket endpoint for DeepAgents with streaming and human-in-the-loop support.
 
     Uses DeepAgents (LangGraph-based) to stream agent events including:
     - user_prompt: When user input is received
@@ -1914,20 +1915,34 @@ async def agent_websocket(
     - text_delta: Streaming text from the model
     - tool_call: When a tool is called (ls, read_file, write_file, edit_file, etc.)
     - tool_result: When a tool returns a result
+    - tool_approval_required: When human approval is needed for tool execution
     - final_result: When the final result is ready
     - complete: When processing is complete
     - error: When an error occurs
 
-    DeepAgents provides built-in tools for:
-    - File operations: ls, read_file, write_file, edit_file, glob, grep
-    - Task management: write_todos, task (subagent spawning)
-    - Shell execution: execute (when sandbox backend is enabled)
+    Human-in-the-loop:
+    When DEEPAGENTS_INTERRUPT_TOOLS is configured, certain tools will require
+    approval before execution. The frontend receives a 'tool_approval_required'
+    event and should respond with a 'resume' message containing decisions.
 
-    Expected input message format:
+    Expected input message formats:
+
+    Regular message:
     {
+        "type": "message",  // optional, default
         "message": "user message here",
         "history": [{"role": "user|assistant|system", "content": "..."}]{% if cookiecutter.enable_conversation_persistence and cookiecutter.use_database %},
-        "conversation_id": "optional-uuid-to-continue-existing-conversation"{% endif %}
+        "conversation_id": "optional-uuid"{% endif %}
+    }
+
+    Resume after interrupt:
+    {
+        "type": "resume",
+        "decisions": [
+            {"type": "approve"},
+            {"type": "reject"},
+            {"type": "edit", "edited_action": {"name": "tool_name", "args": {...}}}
+        ]
     }
 {%- if cookiecutter.websocket_auth_jwt %}
 
@@ -1956,6 +1971,10 @@ async def agent_websocket(
     # Conversation state per connection
     conversation_history: list[dict[str, str]] = []
     context: AgentContext = {}
+    # Thread ID for LangGraph state persistence (required for HITL)
+    thread_id: str = str(uuid.uuid4())
+    # Track pending interrupt for resume
+    pending_interrupt: InterruptData | None = None
 {%- if cookiecutter.websocket_auth_jwt %}
     context["user_id"] = str(user.id) if user else None
     context["user_name"] = user.email if user else None
@@ -1964,14 +1983,103 @@ async def agent_websocket(
     current_conversation_id: str | None = None
 {%- endif %}
 
+    # Create assistant instance (reused for the connection)
+    assistant = get_agent()
+
     try:
         while True:
-            # Receive user message
-            data = await websocket.receive_json()
-            user_message = data.get("message", "")
+            # Receive message from client
+            raw_data = await websocket.receive_json()
+            message_type = raw_data.get("type", "message")
+
+            # Handle resume after interrupt
+            if message_type == "resume":
+                if not pending_interrupt:
+                    await manager.send_event(websocket, "error", {"message": "No pending interrupt to resume"})
+                    continue
+
+                decisions: list[Decision] = raw_data.get("decisions", [])
+                if len(decisions) != len(pending_interrupt["action_requests"]):
+                    await manager.send_event(
+                        websocket,
+                        "error",
+                        {"message": f"Expected {len(pending_interrupt['action_requests'])} decisions, got {len(decisions)}"},
+                    )
+                    continue
+
+                # Clear pending interrupt
+                pending_interrupt = None
+
+                try:
+                    await manager.send_event(websocket, "resume_start", {})
+
+                    final_output = ""
+                    seen_tool_call_ids: set[str] = set()
+
+                    # Stream resume
+                    async for stream_mode, stream_data in assistant.stream_resume(
+                        decisions=decisions,
+                        thread_id=thread_id,
+                        context=context,
+                    ):
+                        if stream_mode == "interrupt":
+                            # Another interrupt occurred
+                            pending_interrupt = stream_data
+                            await manager.send_event(
+                                websocket,
+                                "tool_approval_required",
+                                {
+                                    "action_requests": pending_interrupt["action_requests"],
+                                    "review_configs": pending_interrupt["review_configs"],
+                                },
+                            )
+                            break
+
+                        if stream_mode == "messages":
+                            chunk, _metadata = stream_data
+                            if isinstance(chunk, AIMessageChunk) and chunk.content:
+                                text_content = ""
+                                if isinstance(chunk.content, str):
+                                    text_content = chunk.content
+                                elif isinstance(chunk.content, list):
+                                    for block in chunk.content:
+                                        if isinstance(block, dict) and block.get("type") == "text":
+                                            text_content += block.get("text", "")
+                                        elif isinstance(block, str):
+                                            text_content += block
+                                if text_content:
+                                    await manager.send_event(websocket, "text_delta", {"content": text_content})
+                                    final_output += text_content
+
+                        elif stream_mode == "updates":
+                            for node_name, update in stream_data.items():
+                                if node_name == "tools":
+                                    for msg in update.get("messages", []):
+                                        if isinstance(msg, ToolMessage):
+                                            await manager.send_event(
+                                                websocket,
+                                                "tool_result",
+                                                {"tool_call_id": msg.tool_call_id, "content": msg.content},
+                                            )
+
+                    if not pending_interrupt:
+                        # No interrupt, send final result
+                        if final_output:
+                            conversation_history.append({"role": "assistant", "content": final_output})
+                        await manager.send_event(websocket, "final_result", {"output": final_output})
+                        await manager.send_event(websocket, "complete", {})
+
+                except Exception as e:
+                    logger.exception(f"Error resuming agent: {e}")
+                    await manager.send_event(websocket, "error", {"message": str(e)})
+
+                continue
+
+            # Regular message handling
+            user_message = raw_data.get("message", "")
             # Optionally accept history from client (or use server-side tracking)
-            if "history" in data:
-                conversation_history = data["history"]
+            if "history" in raw_data:
+                conversation_history = raw_data["history"]
 
             if not user_message:
                 await manager.send_event(websocket, "error", {"message": "Empty message"})
@@ -1986,7 +2094,7 @@ async def agent_websocket(
                     conv_service = get_conversation_service(db)
 
                     # Get or create conversation
-                    requested_conv_id = data.get("conversation_id")
+                    requested_conv_id = raw_data.get("conversation_id")
                     if requested_conv_id:
                         current_conversation_id = requested_conv_id
                         # Verify conversation exists
@@ -2017,7 +2125,7 @@ async def agent_websocket(
                     conv_service = get_conversation_service(db)
 
                     # Get or create conversation
-                    requested_conv_id = data.get("conversation_id")
+                    requested_conv_id = raw_data.get("conversation_id")
                     if requested_conv_id:
                         current_conversation_id = requested_conv_id
                         conv_service.get_conversation(requested_conv_id)
@@ -2051,7 +2159,7 @@ async def agent_websocket(
             # Handle conversation persistence (MongoDB)
             conv_service = get_conversation_service()
 
-            requested_conv_id = data.get("conversation_id")
+            requested_conv_id = raw_data.get("conversation_id")
             if requested_conv_id:
                 current_conversation_id = requested_conv_id
                 await conv_service.get_conversation(requested_conv_id)
@@ -2080,8 +2188,6 @@ async def agent_websocket(
             await manager.send_event(websocket, "user_prompt", {"content": user_message})
 
             try:
-                assistant = get_agent()
-
                 final_output = ""
                 tool_events: list[Any] = []
                 seen_tool_call_ids: set[str] = set()
@@ -2089,13 +2195,27 @@ async def agent_websocket(
                 await manager.send_event(websocket, "model_request_start", {})
 
                 # Use DeepAgents' stream() which wraps LangGraph's astream
-                async for stream_mode, data in assistant.stream(
+                async for stream_mode, stream_data in assistant.stream(
                     user_message,
                     history=conversation_history,
                     context=context,
+                    thread_id=thread_id,
                 ):
+                    # Handle interrupt - human approval required
+                    if stream_mode == "interrupt":
+                        pending_interrupt = stream_data
+                        await manager.send_event(
+                            websocket,
+                            "tool_approval_required",
+                            {
+                                "action_requests": pending_interrupt["action_requests"],
+                                "review_configs": pending_interrupt["review_configs"],
+                            },
+                        )
+                        break
+
                     if stream_mode == "messages":
-                        chunk, _metadata = data
+                        chunk, _metadata = stream_data
 
                         if isinstance(chunk, AIMessageChunk):
                             if chunk.content:
@@ -2136,7 +2256,7 @@ async def agent_websocket(
 
                     elif stream_mode == "updates":
                         # Handle state updates from nodes
-                        for node_name, update in data.items():
+                        for node_name, update in stream_data.items():
                             if node_name == "tools":
                                 # Tool node completed - extract tool results
                                 for msg in update.get("messages", []):
@@ -2168,39 +2288,57 @@ async def agent_websocket(
                                                     },
                                                 )
 
-                await manager.send_event(
-                    websocket,
-                    "final_result",
-                    {"output": final_output},
-                )
-
-                # Update conversation history
-                conversation_history.append({"role": "user", "content": user_message})
-                if final_output:
-                    conversation_history.append(
-                        {"role": "assistant", "content": final_output}
+                # Only send final result if not interrupted
+                if not pending_interrupt:
+                    await manager.send_event(
+                        websocket,
+                        "final_result",
+                        {"output": final_output},
                     )
+
+                    # Update conversation history
+                    conversation_history.append({"role": "user", "content": user_message})
+                    if final_output:
+                        conversation_history.append(
+                            {"role": "assistant", "content": final_output}
+                        )
 
 {%- if cookiecutter.enable_conversation_persistence and (cookiecutter.use_postgresql or cookiecutter.use_sqlite) %}
 
-                # Save assistant response to database
-                if current_conversation_id and final_output:
-                    try:
+                    # Save assistant response to database
+                    if current_conversation_id and final_output:
+                        try:
 {%- if cookiecutter.use_postgresql %}
-                        async with get_db_context() as db:
-                            conv_service = get_conversation_service(db)
-                            await conv_service.add_message(
-                                UUID(current_conversation_id),
-                                MessageCreate(
-                                    role="assistant",
-                                    content=final_output,
-                                    model_name=assistant.model_name if hasattr(assistant, "model_name") else None,
-                                ),
-                            )
+                            async with get_db_context() as db:
+                                conv_service = get_conversation_service(db)
+                                await conv_service.add_message(
+                                    UUID(current_conversation_id),
+                                    MessageCreate(
+                                        role="assistant",
+                                        content=final_output,
+                                        model_name=assistant.model_name if hasattr(assistant, "model_name") else None,
+                                    ),
+                                )
 {%- else %}
-                        with get_db_session() as db:
-                            conv_service = get_conversation_service(db)
-                            conv_service.add_message(
+                            with get_db_session() as db:
+                                conv_service = get_conversation_service(db)
+                                conv_service.add_message(
+                                    current_conversation_id,
+                                    MessageCreate(
+                                        role="assistant",
+                                        content=final_output,
+                                        model_name=assistant.model_name if hasattr(assistant, "model_name") else None,
+                                    ),
+                                )
+{%- endif %}
+                        except Exception as e:
+                            logger.warning(f"Failed to persist assistant response: {e}")
+{%- elif cookiecutter.enable_conversation_persistence and cookiecutter.use_mongodb %}
+
+                    # Save assistant response to database
+                    if current_conversation_id and final_output:
+                        try:
+                            await conv_service.add_message(
                                 current_conversation_id,
                                 MessageCreate(
                                     role="assistant",
@@ -2208,31 +2346,15 @@ async def agent_websocket(
                                     model_name=assistant.model_name if hasattr(assistant, "model_name") else None,
                                 ),
                             )
-{%- endif %}
-                    except Exception as e:
-                        logger.warning(f"Failed to persist assistant response: {e}")
-{%- elif cookiecutter.enable_conversation_persistence and cookiecutter.use_mongodb %}
-
-                # Save assistant response to database
-                if current_conversation_id and final_output:
-                    try:
-                        await conv_service.add_message(
-                            current_conversation_id,
-                            MessageCreate(
-                                role="assistant",
-                                content=final_output,
-                                model_name=assistant.model_name if hasattr(assistant, "model_name") else None,
-                            ),
-                        )
-                    except Exception as e:
-                        logger.warning(f"Failed to persist assistant response: {e}")
+                        except Exception as e:
+                            logger.warning(f"Failed to persist assistant response: {e}")
 {%- endif %}
 
-                await manager.send_event(websocket, "complete", {
+                    await manager.send_event(websocket, "complete", {
 {%- if cookiecutter.enable_conversation_persistence and cookiecutter.use_database %}
-                    "conversation_id": current_conversation_id,
+                        "conversation_id": current_conversation_id,
 {%- endif %}
-                })
+                    })
 
             except WebSocketDisconnect:
                 # Client disconnected during processing - this is normal
