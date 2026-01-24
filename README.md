@@ -147,6 +147,34 @@ Generated projects include **CLAUDE.md** and **AGENTS.md** files optimized for A
 
 ---
 
+## 📸 Screenshots
+
+### Chat Interface
+| Light Mode | Dark Mode |
+|:---:|:---:|
+| ![Chat Light](https://raw.githubusercontent.com/vstorm-co/full-stack-fastapi-nextjs-llm-template/main/assets/new_chat_light.png) | ![Chat Dark](https://raw.githubusercontent.com/vstorm-co/full-stack-fastapi-nextjs-llm-template/main/assets/new_chat_dark.png) |
+
+### Authentication
+| Register | Login |
+|:---:|:---:|
+| ![Register](https://raw.githubusercontent.com/vstorm-co/full-stack-fastapi-nextjs-llm-template/main/assets/new_register.png) | ![Login](https://raw.githubusercontent.com/vstorm-co/full-stack-fastapi-nextjs-llm-template/main/assets/new_login.png) |
+
+### Observability
+| Logfire (PydanticAI) | LangSmith (LangChain) |
+|:---:|:---:|
+| ![Logfire](https://raw.githubusercontent.com/vstorm-co/full-stack-fastapi-nextjs-llm-template/main/assets/logfire.png) | ![LangSmith](https://raw.githubusercontent.com/vstorm-co/full-stack-fastapi-nextjs-llm-template/main/assets/langsmith.png) |
+
+### Admin, Monitoring & API
+| Celery Flower | SQLAdmin Panel |
+|:---:|:---:|
+| ![Flower](https://raw.githubusercontent.com/vstorm-co/full-stack-fastapi-nextjs-llm-template/main/assets/flower.png) | ![Admin](https://raw.githubusercontent.com/vstorm-co/full-stack-fastapi-nextjs-llm-template/main/assets/admin.png) |
+
+| API Documentation |
+|:---:|
+| ![API Docs](https://raw.githubusercontent.com/vstorm-co/full-stack-fastapi-nextjs-llm-template/main/assets/docs_2.png) |
+
+---
+
 ## 🚀 Quick Start
 
 ### Installation
@@ -268,34 +296,6 @@ uv run my_ai_app user create-admin       # Create admin user
 ```
 
 Use `make help` to see all available Makefile shortcuts.
-
----
-
-## 📸 Screenshots
-
-### Chat Interface
-| Light Mode | Dark Mode |
-|:---:|:---:|
-| ![Chat Light](https://raw.githubusercontent.com/vstorm-co/full-stack-fastapi-nextjs-llm-template/main/assets/new_chat_light.png) | ![Chat Dark](https://raw.githubusercontent.com/vstorm-co/full-stack-fastapi-nextjs-llm-template/main/assets/new_chat_dark.png) |
-
-### Authentication
-| Register | Login |
-|:---:|:---:|
-| ![Register](https://raw.githubusercontent.com/vstorm-co/full-stack-fastapi-nextjs-llm-template/main/assets/new_register.png) | ![Login](https://raw.githubusercontent.com/vstorm-co/full-stack-fastapi-nextjs-llm-template/main/assets/new_login.png) |
-
-### Observability
-| Logfire (PydanticAI) | LangSmith (LangChain) |
-|:---:|:---:|
-| ![Logfire](https://raw.githubusercontent.com/vstorm-co/full-stack-fastapi-nextjs-llm-template/main/assets/logfire.png) | ![LangSmith](https://raw.githubusercontent.com/vstorm-co/full-stack-fastapi-nextjs-llm-template/main/assets/langsmith.png) |
-
-### Admin, Monitoring & API
-| Celery Flower | SQLAdmin Panel |
-|:---:|:---:|
-| ![Flower](https://raw.githubusercontent.com/vstorm-co/full-stack-fastapi-nextjs-llm-template/main/assets/flower.png) | ![Admin](https://raw.githubusercontent.com/vstorm-co/full-stack-fastapi-nextjs-llm-template/main/assets/admin.png) |
-
-| API Documentation |
-|:---:|
-| ![API Docs](https://raw.githubusercontent.com/vstorm-co/full-stack-fastapi-nextjs-llm-template/main/assets/docs_2.png) |
 
 ---
 
